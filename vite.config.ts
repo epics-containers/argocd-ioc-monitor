@@ -14,10 +14,20 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://localhost:8443',
+        target: 'https://argocd.diamond.ac.uk',
         changeOrigin: true,
-        secure: false,
-      }
+        secure: true,
+      },
+      '/login': {
+        target: 'https://argocd.diamond.ac.uk',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/auth': {
+        target: 'https://argocd.diamond.ac.uk',
+        changeOrigin: true,
+        secure: true,
+      },
     }
   }
 })
