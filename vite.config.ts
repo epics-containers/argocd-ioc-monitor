@@ -8,17 +8,19 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const argocdToken = env.ARGOCD_AUTH_TOKEN
 
-  const proxyConfig = {
-    target: 'https://argocd.diamond.ac.uk',
-    changeOrigin: true,
-    secure: true,
-    ...(argocdToken && {
-      configure: (proxy: any) => {
-        proxy.on('proxyReq', (proxyReq: any) => {
-          proxyReq.setHeader('Cookie', `argocd.token=${argocdToken}`);
-        });
-      },
-    }),
+  function createProxyConfig() {
+    return {
+      target: 'https://argocd.diamond.ac.uk',
+      changeOrigin: true,
+      secure: true,
+      ...(argocdToken && {
+        configure: (proxy: any) => {
+          proxy.on('proxyReq', (proxyReq: any) => {
+            proxyReq.setHeader('Cookie', `argocd.token=${argocdToken}`);
+          });
+        },
+      }),
+    }
   }
 
   return {
@@ -30,8 +32,8 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
-        '/api': proxyConfig,
-        '/auth': proxyConfig,
+        '/api': createProxyConfig(),
+        '/auth': createProxyConfig(),
       },
     },
   }

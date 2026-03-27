@@ -13,8 +13,13 @@ export async function listApplications(
   return argocdFetch<ApplicationList>(path);
 }
 
-export async function getApplication(name: string): Promise<Application> {
+export async function getApplication(name: string, appNamespace?: string): Promise<Application> {
+  const params = new URLSearchParams();
+  if (appNamespace) {
+    params.set("appNamespace", appNamespace);
+  }
+  const query = params.toString();
   return argocdFetch<Application>(
-    `/api/v1/applications/${encodeURIComponent(name)}`,
+    `/api/v1/applications/${encodeURIComponent(name)}${query ? `?${query}` : ""}`,
   );
 }

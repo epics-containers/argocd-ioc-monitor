@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router";
+import { useParams, useSearchParams, Link } from "react-router";
 import { ArrowLeft, RotateCcw, ScrollText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,8 +20,10 @@ import type { ResourceNode } from "@/types/resource";
 
 export function ApplicationDetailPage() {
   const { name } = useParams<{ name: string }>();
-  const { data: app, isLoading: appLoading } = useApplication(name!);
-  const { data: tree, isLoading: treeLoading } = useResourceTree(name!);
+  const [searchParams] = useSearchParams();
+  const appNamespace = searchParams.get("appNamespace") ?? undefined;
+  const { data: app, isLoading: appLoading } = useApplication(name!, appNamespace);
+  const { data: tree, isLoading: treeLoading } = useResourceTree(name!, appNamespace);
   const restartMutation = useRestartPod();
 
   const [restartTarget, setRestartTarget] = useState<ResourceNode | null>(null);
@@ -106,7 +108,7 @@ export function ApplicationDetailPage() {
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Link
-                          to={`/apps/${encodeURIComponent(name!)}/logs/${encodeURIComponent(pod.name)}?namespace=${encodeURIComponent(pod.namespace)}`}
+                          to={`/apps/${encodeURIComponent(name!)}/logs/${encodeURIComponent(pod.name)}?namespace=${encodeURIComponent(pod.namespace)}${appNamespace ? `&appNamespace=${encodeURIComponent(appNamespace)}` : ""}`}
                           className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-sm font-medium hover:bg-muted"
                         >
                           <ScrollText className="h-4 w-4" />
@@ -147,6 +149,7 @@ export function ApplicationDetailPage() {
                 appName: name!,
                 podName: restartTarget.name,
                 namespace: restartTarget.namespace,
+                appNamespace,
               },
               { onSuccess: () => setRestartTarget(null) },
             );

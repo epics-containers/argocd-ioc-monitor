@@ -11,8 +11,9 @@ export function LogsPage() {
   const { name, podName } = useParams<{ name: string; podName: string }>();
   const [searchParams] = useSearchParams();
   const namespace = searchParams.get("namespace") ?? "";
+  const appNamespace = searchParams.get("appNamespace") ?? undefined;
 
-  const { data: tree } = useResourceTree(name!);
+  const { data: tree } = useResourceTree(name!, appNamespace);
 
   const containers = useMemo(() => {
     if (!tree) return [];
@@ -48,6 +49,7 @@ export function LogsPage() {
     appName: name!,
     params: logParams,
     enabled: !!podName && !!namespace,
+    appNamespace,
   });
 
   if (!podName || !namespace) {
@@ -58,7 +60,7 @@ export function LogsPage() {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Link
-          to={`/apps/${encodeURIComponent(name!)}`}
+          to={`/apps/${encodeURIComponent(name!)}${appNamespace ? `?appNamespace=${encodeURIComponent(appNamespace)}` : ""}`}
           className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-sm font-medium hover:bg-muted"
         >
           <ArrowLeft className="h-4 w-4" />

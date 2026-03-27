@@ -21,9 +21,10 @@ export const columns: ColumnDef<Application>[] = [
     ),
     cell: ({ row }) => {
       const name = row.original.metadata.name;
+      const appNamespace = row.original.metadata.namespace;
       return (
         <Link
-          to={`/apps/${encodeURIComponent(name)}`}
+          to={`/apps/${encodeURIComponent(name)}?appNamespace=${encodeURIComponent(appNamespace)}`}
           className="font-medium text-primary hover:underline"
         >
           {name}
@@ -81,10 +82,11 @@ export const columns: ColumnDef<Application>[] = [
     header: "",
     cell: ({ row }) => {
       const name = row.original.metadata.name;
+      const appNamespace = row.original.metadata.namespace;
       return (
         <div className="flex justify-end">
           <Link
-            to={`/apps/${encodeURIComponent(name)}`}
+            to={`/apps/${encodeURIComponent(name)}?appNamespace=${encodeURIComponent(appNamespace)}`}
             className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-sm font-medium hover:bg-muted"
           >
             <FileText className="h-4 w-4" />

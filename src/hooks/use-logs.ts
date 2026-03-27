@@ -6,9 +6,10 @@ interface UseLogsOptions {
   appName: string;
   params: LogParams;
   enabled?: boolean;
+  appNamespace?: string;
 }
 
-export function useLogs({ appName, params, enabled = true }: UseLogsOptions) {
+export function useLogs({ appName, params, enabled = true, appNamespace }: UseLogsOptions) {
   const [lines, setLines] = useState<string[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -34,6 +35,7 @@ export function useLogs({ appName, params, enabled = true }: UseLogsOptions) {
         appName,
         params,
         controller.signal,
+        appNamespace,
       )) {
         if (controller.signal.aborted) break;
         setLines((prev) => [...prev, entry.content]);
@@ -46,7 +48,7 @@ export function useLogs({ appName, params, enabled = true }: UseLogsOptions) {
     } finally {
       setIsStreaming(false);
     }
-  }, [appName, params, stop]);
+  }, [appName, params, stop, appNamespace]);
 
   useEffect(() => {
     if (enabled) {

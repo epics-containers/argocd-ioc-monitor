@@ -14,11 +14,16 @@ export async function* streamLogs(
   appName: string,
   params: LogParams,
   signal?: AbortSignal,
+  appNamespace?: string,
 ): AsyncGenerator<LogEntry> {
   const searchParams = new URLSearchParams({
     podName: params.podName,
     namespace: params.namespace,
   });
+
+  if (appNamespace) {
+    searchParams.set("appNamespace", appNamespace);
+  }
 
   if (params.container) {
     searchParams.set("container", params.container);
