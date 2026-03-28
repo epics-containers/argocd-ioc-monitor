@@ -1,15 +1,43 @@
-# React + TypeScript + Vite
+# ArgoCD IOC Monitor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + TypeScript + Vite dashboard for monitoring ArgoCD application state.
 
-Currently, two official plugins are available:
+## Getting Started with Dev Containers
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The easiest way to run this project is using a [Dev Container](https://containers.dev/), which provides a fully configured development environment.
 
-## React Compiler
+### Prerequisites
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [Docker](https://www.docker.com/get-started/) installed and running
+- One of:
+  - [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+  - [GitHub Codespaces](https://github.com/features/codespaces)
+  - Any [supporting tool](https://containers.dev/supporting) (JetBrains, DevPod, etc.)
+
+### Launch in VS Code
+
+1. Clone the repository and open it in VS Code:
+   ```sh
+   git clone <repo-url> && code argocd-ioc-monitor
+   ```
+2. VS Code will detect the Dev Container configuration and prompt **"Reopen in Container"** — click it.
+   Alternatively, open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **Dev Containers: Reopen in Container**.
+3. Wait for the container to build and `npm install` to finish (runs automatically via `postCreateCommand`).
+4. Copy `.env.example` to `.env` and fill in the required values:
+   ```sh
+   cp .env.example .env
+   ```
+   At minimum, set `ARGOCD_AUTH_TOKEN` (see `.env.example` for instructions).
+5. Start the dev server:
+   ```sh
+   npm run dev
+   ```
+6. The app is available at **http://localhost:5173** (port forwarded automatically).
+
+### Launch in GitHub Codespaces
+
+1. From the repository on GitHub, click **Code → Codespaces → Create codespace on main**.
+2. Once the environment is ready, copy `.env.example` to `.env`, fill in values, and run `npm run dev`.
 
 ## Expanding the ESLint configuration
 
