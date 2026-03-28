@@ -1,6 +1,11 @@
 {
   "name": "ArgoCD IOC Monitor",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    }
+  },
   "forwardPorts": [
     5173
   ],
@@ -18,13 +23,16 @@
     "PATH": "/cache/venv-for${localWorkspaceFolder}/bin:${containerEnv:PATH}"
   },
   "remoteUser": "root",
-  "postCreateCommand": "npm install",
+  "postCreateCommand": "npm install && pip install pre-commit -r docs/requirements.txt && pre-commit install --install-hooks",
   "customizations": {
     "vscode": {
       "extensions": [
         "dbaeumer.vscode-eslint",
         "bradlc.vscode-tailwindcss",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "github.vscode-github-actions",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-docker"
       ]
     }
   },
@@ -33,6 +41,12 @@
     {
       "source": "gh-auth-${localWorkspaceFolderBasename}",
       "target": "/root/.config/gh",
+      "type": "volume"
+    },
+    // Persistent cache for pre-commit, uv, etc.
+    {
+      "source": "devcontainer-shared-cache",
+      "target": "/cache",
       "type": "volume"
     }
   ],
