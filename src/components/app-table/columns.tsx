@@ -48,7 +48,16 @@ export const columns: ColumnDef<Application>[] = [
   {
     accessorFn: (row) => row.status.health.status,
     id: "health",
-    header: "Health",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Health
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => (
       <HealthBadge status={row.original.status.health.status} />
     ),
@@ -58,7 +67,16 @@ export const columns: ColumnDef<Application>[] = [
   {
     accessorFn: (row) => row.status.sync.status,
     id: "sync",
-    header: "Sync",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Sync
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => (
       <SyncBadge status={row.original.status.sync.status} />
     ),
@@ -91,7 +109,16 @@ export const columns: ColumnDef<Application>[] = [
         .map(([k, v]) => `${k}=${v}`)
         .join(" "),
     id: "properties",
-    header: "Properties",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Properties
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
       const labels = row.original.metadata.labels;
       const entries = Object.entries(labels ?? {}).filter(
