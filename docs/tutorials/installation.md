@@ -60,11 +60,27 @@ uv run tox -e pre-commit,docs
 
 ## Production Deployment
 
-See the Helm chart in `helm/argocd-ioc-monitor/` for Kubernetes deployment.
+### Install from OCI registry
+
+The Helm chart is published to the GitHub Container Registry on each tagged
+release. Install directly from the OCI registry:
 
 ```bash
-helm install ioc-monitor helm/argocd-ioc-monitor \
-  --set argocd.url=https://argocd.diamond.ac.uk \
+helm install argocd-monitor oci://ghcr.io/epics-containers/charts/argocd-monitor \
+  --set argocd.url=https://argocd.example.com \
   --set ingress.enabled=true \
-  --set ingress.host=ioc-monitor.diamond.ac.uk
+  --set ingress.host=argocd-monitor.example.com
 ```
+
+### Install from local chart
+
+Alternatively, install from the source tree:
+
+```bash
+helm install argocd-monitor helm/argocd-monitor \
+  --set argocd.url=https://argocd.example.com \
+  --set ingress.enabled=true \
+  --set ingress.host=argocd-monitor.example.com
+```
+
+See `helm/argocd-monitor/values.yaml` for the full list of configurable values.
