@@ -27,6 +27,8 @@ export function ApplicationDetailPage() {
   const restartMutation = useRestartPod();
 
   const [restartTarget, setRestartTarget] = useState<ResourceNode | null>(null);
+  const tableFilters = sessionStorage.getItem("tableFilters");
+  const backTo = tableFilters ? `/?${tableFilters}` : "/";
 
   if (appLoading || treeLoading) {
     return <LoadingSpinner message="Loading application..." />;
@@ -47,7 +49,7 @@ export function ApplicationDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Link
-          to="/"
+          to={backTo}
           className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-sm font-medium hover:bg-muted"
         >
           <ArrowLeft className="h-4 w-4" />
