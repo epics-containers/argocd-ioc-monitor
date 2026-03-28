@@ -27,6 +27,7 @@ export function ApplicationDetailPage() {
   const restartMutation = useRestartPod();
 
   const [restartTarget, setRestartTarget] = useState<ResourceNode | null>(null);
+  const [restartError, setRestartError] = useState<string | null>(null);
   const tableFilters = sessionStorage.getItem("tableFilters");
   const backTo = tableFilters ? `/?${tableFilters}` : "/";
 
@@ -68,6 +69,12 @@ export function ApplicationDetailPage() {
           {namespace && <Badge variant="outline">{namespace}</Badge>}
         </div>
       </div>
+
+      {restartError && (
+        <p className="text-sm text-destructive">
+          Restart failed: {restartError}
+        </p>
+      )}
 
       <div>
         <h3 className="mb-3 text-lg font-medium">Pods ({pods.length})</h3>
@@ -146,6 +153,7 @@ export function ApplicationDetailPage() {
         loading={restartMutation.isPending}
         onConfirm={() => {
           if (restartTarget) {
+            setRestartError(null);
             restartMutation.mutate(
               {
                 appName: name!,
@@ -153,7 +161,13 @@ export function ApplicationDetailPage() {
                 namespace: restartTarget.namespace,
                 appNamespace,
               },
-              { onSuccess: () => setRestartTarget(null) },
+              {
+                onSuccess: () => setRestartTarget(null),
+                onError: (err) => {
+                  setRestartTarget(null);
+                  setRestartError(err.message);
+                },
+              },
             );
           }
         }}
