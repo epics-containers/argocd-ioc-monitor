@@ -11,9 +11,13 @@ interface UseLogsOptions {
 
 export function useLogs({ appName, params, enabled = true, appNamespace }: UseLogsOptions) {
   const [lines, setLines] = useState<string[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(enabled);
   const [error, setError] = useState<Error | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Keep a ref to the latest params so the effect doesn't depend on them
+  const latestRef = useRef({ appName, params, appNamespace });
+  latestRef.current = { appName, params, appNamespace };
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
@@ -29,6 +33,7 @@ export function useLogs({ appName, params, enabled = true, appNamespace }: UseLo
 
     const controller = new AbortController();
     abortRef.current = controller;
+    const { appName, params, appNamespace } = latestRef.current;
 
     try {
       for await (const entry of streamLogs(
@@ -46,16 +51,20 @@ export function useLogs({ appName, params, enabled = true, appNamespace }: UseLo
       }
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
-      setIsStreaming(false);
+      if (!controller.signal.aborted) {
+        setIsStreaming(false);
+      }
     }
-  }, [appName, params, stop, appNamespace]);
+  }, [stop]);
 
+  // Start on mount, restart when params change
   useEffect(() => {
     if (enabled) {
       start();
     }
     return stop;
-  }, [enabled, start, stop]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, appName, params, appNamespace]);
 
   return { lines, isStreaming, error, stop, restart: start };
 }

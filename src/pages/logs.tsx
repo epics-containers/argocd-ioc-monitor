@@ -32,7 +32,7 @@ export function LogsPage() {
   const [previous, setPrevious] = useState(false);
   const [follow, setFollow] = useState(true);
   const [sinceSeconds, setSinceSeconds] = useState(0);
-  const [tailLines, setTailLines] = useState(100);
+  const [tailLines, setTailLines] = useState(1000);
 
   const logParams = useMemo(
     () => ({

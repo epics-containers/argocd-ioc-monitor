@@ -27,17 +27,17 @@ interface LogControlsProps {
 }
 
 const timeRanges = [
-  { label: "Last 5m", value: 300 },
-  { label: "Last 15m", value: 900 },
-  { label: "Last 1h", value: 3600 },
-  { label: "Last 6h", value: 21600 },
-  { label: "All", value: 0 },
+  { label: "Last 5m", seconds: 300 },
+  { label: "Last 15m", seconds: 900 },
+  { label: "Last 1h", seconds: 3600 },
+  { label: "Last 6h", seconds: 21600 },
+  { label: "All time", seconds: 0 },
 ];
 
 const tailLineOptions = [
-  { label: "100 lines", value: 100 },
-  { label: "1000 lines", value: 1000 },
-  { label: "All lines", value: 0 },
+  { label: "100 lines", lines: 100 },
+  { label: "1000 lines", lines: 1000 },
+  { label: "All lines", lines: 0 },
 ];
 
 export function LogControls({
@@ -74,15 +74,15 @@ export function LogControls({
       )}
 
       <Select
-        value={String(sinceSeconds)}
-        onValueChange={(v) => { if (v !== null) onSinceSecondsChange(Number(v)); }}
+        value={timeRanges.find((r) => r.seconds === sinceSeconds)?.label ?? "All time"}
+        onValueChange={(v) => { if (v !== null) onSinceSecondsChange(timeRanges.find((r) => r.label === v)?.seconds ?? 0); }}
       >
         <SelectTrigger className="w-36">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {timeRanges.map((r) => (
-            <SelectItem key={r.value} value={String(r.value)}>
+            <SelectItem key={r.label} value={r.label}>
               {r.label}
             </SelectItem>
           ))}
@@ -90,15 +90,15 @@ export function LogControls({
       </Select>
 
       <Select
-        value={String(tailLines)}
-        onValueChange={(v) => { if (v !== null) onTailLinesChange(Number(v)); }}
+        value={tailLineOptions.find((r) => r.lines === tailLines)?.label ?? "All lines"}
+        onValueChange={(v) => { if (v !== null) onTailLinesChange(tailLineOptions.find((r) => r.label === v)?.lines ?? 0); }}
       >
         <SelectTrigger className="w-36">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {tailLineOptions.map((r) => (
-            <SelectItem key={r.value} value={String(r.value)}>
+            <SelectItem key={r.label} value={r.label}>
               {r.label}
             </SelectItem>
           ))}
