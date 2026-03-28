@@ -1,42 +1,56 @@
+[![CI](https://github.com/epics-containers/argocd-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/epics-containers/argocd-monitor/actions/workflows/ci.yml)
+
 # ArgoCD Monitor
 
 A React + TypeScript + Vite dashboard for monitoring ArgoCD application state.
 
-<!-- README only content -->
+Source          | <https://github.com/epics-containers/argocd-monitor>
+:---:           | :---:
+Container       | `ghcr.io/epics-containers/argocd-monitor`
+Helm Chart      | `oci://ghcr.io/epics-containers/charts/argocd-monitor`
+Documentation   | <https://epics-containers.github.io/argocd-monitor>
+Releases        | <https://github.com/epics-containers/argocd-monitor/releases>
 
-## Getting Started with Dev Containers
+## Features
 
-The easiest way to run this project is using a [Dev Container](https://containers.dev/), which provides a fully configured development environment.
+- Real-time application health and sync status overview
+- Sortable, filterable applications table
+- Detailed application view with pod info, images, and age
+- Pod log streaming with container selection
+- Pod restart with confirmation dialog
+- Automatic token refresh for uninterrupted sessions
+- Light and dark theme support
 
-### Prerequisites
+## Quick Start
 
-- [Docker](https://www.docker.com/get-started/) installed and running
-- One of:
-  - [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-  - [GitHub Codespaces](https://github.com/features/codespaces)
-  - Any [supporting tool](https://containers.dev/supporting) (JetBrains, DevPod, etc.)
+The easiest way to run this project is using a
+[Dev Container](https://containers.dev/), which provides a fully configured
+development environment.
 
-### Launch in VS Code
-
-1. Clone the repository and open it in VS Code:
+1. Clone the repository and open in VS Code:
    ```sh
-   git clone <repo-url> && code argocd-monitor
+   git clone https://github.com/epics-containers/argocd-monitor.git
+   code argocd-monitor
    ```
-2. VS Code will detect the Dev Container configuration and prompt **"Reopen in Container"** — click it.
-   Alternatively, open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **Dev Containers: Reopen in Container**.
-3. Wait for the container to build and `npm install` to finish (runs automatically via `postCreateCommand`).
-4. Copy `.env.example` to `.env` and fill in the required values:
-   ```sh
-   cp .env.example .env
-   ```
-   At minimum, set `ARGOCD_AUTH_TOKEN` (see `.env.example` for instructions).
-5. Start the dev server:
+2. Reopen in the Dev Container when prompted.
+3. Copy `.env.example` to `.env` and set `ARGOCD_AUTH_TOKEN`.
+4. Start the dev server:
    ```sh
    npm run dev
    ```
-6. The app is available at **http://localhost:5173** (port forwarded automatically).
+5. Open <http://localhost:5173>.
 
-### Launch in GitHub Codespaces
+## Kubernetes Deployment
 
-1. From the repository on GitHub, click **Code → Codespaces → Create codespace on main**.
-2. Once the environment is ready, copy `.env.example` to `.env`, fill in values, and run `npm run dev`.
+Install from the OCI Helm chart registry:
+
+```bash
+helm install argocd-monitor oci://ghcr.io/epics-containers/charts/argocd-monitor \
+  --set argocd.url=https://argocd.example.com \
+  --set ingress.enabled=true \
+  --set ingress.host=argocd-monitor.example.com
+```
+
+<!-- README only content. Anything below this line won't be included in index.md -->
+
+See <https://epics-containers.github.io/argocd-monitor> for full documentation.
