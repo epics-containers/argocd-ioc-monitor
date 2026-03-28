@@ -1,3 +1,8 @@
+import { applyStoredTokens, onAuthFailure } from "@/lib/auth-token";
+
+// Restore cookies from localStorage on module load (e.g. after page refresh)
+applyStoredTokens();
+
 export class ApiError extends Error {
   status: number;
   body: string;
@@ -29,7 +34,7 @@ export async function argocdFetch<T>(
   });
 
   if (response.status === 401) {
-    window.location.href = `${baseUrl}/auth/login`;
+    onAuthFailure();
     throw new ApiError(response.status, "Unauthenticated");
   }
 
@@ -54,7 +59,7 @@ export async function argocdFetchStream(
   });
 
   if (response.status === 401) {
-    window.location.href = `${baseUrl}/auth/login`;
+    onAuthFailure();
     throw new ApiError(response.status, "Unauthenticated");
   }
 

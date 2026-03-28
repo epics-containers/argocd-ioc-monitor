@@ -12,14 +12,23 @@ export default defineConfig(({ mode }) => {
     return {
       target: 'https://argocd.diamond.ac.uk',
       changeOrigin: true,
-      secure: true,
-      ...(argocdToken && {
-        configure: (proxy: any) => {
-          proxy.on('proxyReq', (proxyReq: any) => {
-            proxyReq.setHeader('Cookie', `argocd.token=${argocdToken}`);
-          });
-        },
-      }),
+      secure: false,
+      configure: (proxy: any) => {
+        proxy.on('proxyReq', (proxyReq: any, req: any) => {
+          proxyReq.setHeader('Host', 'argocd.diamond.ac.uk');
+          // Forward browser cookies, with env token as fallback
+          const browserCookies = req.headers.cookie || '';
+          const cookieHeader = argocdToken && !browserCookies.includes('argocd.token=')
+            ? `argocd.token=${argocdToken};${browserCookies}`
+            : browserCookies;
+          if (cookieHeader) {
+            proxyReq.setHeader('Cookie', cookieHeader);
+          }
+        });
+        proxy.on('error', (err: any) => {
+          console.error('[proxy error]', err.message);
+        });
+      },
     }
   }
 

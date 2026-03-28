@@ -1,13 +1,21 @@
 import { useNavigate } from "react-router";
-import { Moon, Sun, Activity } from "lucide-react";
+import { Moon, Sun, Activity, LogOut } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
+import { clearStoredToken } from "@/lib/auth-token";
 
 export function Header() {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  function handleLogout() {
+    clearStoredToken();
+    queryClient.invalidateQueries({ queryKey: ["auth"] });
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -28,6 +36,11 @@ export function Header() {
             <span className="text-sm text-muted-foreground">
               {user.username}
             </span>
+          )}
+          {user?.username && (
+            <Button variant="ghost" size="icon-sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+            </Button>
           )}
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {theme === "dark" ? (
