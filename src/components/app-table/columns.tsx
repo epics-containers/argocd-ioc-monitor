@@ -48,7 +48,16 @@ export const columns: ColumnDef<Application>[] = [
   {
     accessorFn: (row) => row.status.health.status,
     id: "health",
-    header: "Health",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Health
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => (
       <HealthBadge status={row.original.status.health.status} />
     ),
@@ -58,7 +67,16 @@ export const columns: ColumnDef<Application>[] = [
   {
     accessorFn: (row) => row.status.sync.status,
     id: "sync",
-    header: "Sync",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Sync
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => (
       <SyncBadge status={row.original.status.sync.status} />
     ),
@@ -85,13 +103,66 @@ export const columns: ColumnDef<Application>[] = [
       row.getValue<string>(id) === value,
   },
   {
+    accessorFn: (row) => row.spec.source?.targetRevision ?? "",
+    id: "revision",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Target Revision
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ getValue }) => (
+      <span className="font-mono text-xs text-muted-foreground">
+        {(getValue() as string) || "-"}
+      </span>
+    ),
+  },
+  {
+    accessorFn: (row) => row.status.operationState?.finishedAt ?? "",
+    id: "lastSync",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Last Sync
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const op = row.original.status.operationState;
+      if (!op?.finishedAt) {
+        return <span className="text-muted-foreground">-</span>;
+      }
+      return (
+        <span className="text-xs text-muted-foreground">
+          {new Date(op.finishedAt).toLocaleString()}
+        </span>
+      );
+    },
+  },
+  {
     accessorFn: (row) =>
       Object.entries(row.metadata.labels ?? {})
         .filter(([k]) => !HIDDEN_LABELS.has(k))
         .map(([k, v]) => `${k}=${v}`)
         .join(" "),
     id: "properties",
-    header: "Properties",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Properties
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
       const labels = row.original.metadata.labels;
       const entries = Object.entries(labels ?? {}).filter(
