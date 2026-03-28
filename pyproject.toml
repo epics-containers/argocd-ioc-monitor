@@ -1,5 +1,5 @@
 [project]
-name = "argocd-ioc-monitor"
+name = "argocd-monitor"
 version = "0.0.0"
 description = "ArgoCD IOC Monitor"
 requires-python = ">=3.12"

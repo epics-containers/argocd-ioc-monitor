@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "argocd-ioc-monitor.fullname" . }}
+  name: {{ include "argocd-monitor.fullname" . }}
   labels:
-    {{- include "argocd-ioc-monitor.labels" . | nindent 4 }}
+    {{- include "argocd-monitor.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "argocd-ioc-monitor.selectorLabels" . | nindent 6 }}
+      {{- include "argocd-monitor.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
         checksum/nginx-config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       labels:
-        {{- include "argocd-ioc-monitor.selectorLabels" . | nindent 8 }}
+        {{- include "argocd-monitor.selectorLabels" . | nindent 8 }}
     spec:
       containers:
         - name: {{ .Chart.Name }}
@@ -42,4 +42,4 @@ spec:
       volumes:
         - name: nginx-config
           configMap:
-            name: {{ include "argocd-ioc-monitor.fullname" . }}-nginx
+            name: {{ include "argocd-monitor.fullname" . }}-nginx

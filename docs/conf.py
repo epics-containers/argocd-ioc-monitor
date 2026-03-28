@@ -8,7 +8,7 @@ import requests
 
 # -- General configuration ------------------------------------------------
 
-project = "argocd-ioc-monitor"
+project = "argocd-monitor"
 
 # Get version from git
 root = Path(__file__).absolute().parent.parent
@@ -56,7 +56,7 @@ copybutton_prompt_is_regexp = True
 # -- Options for HTML output -------------------------------------------------
 
 html_theme = "pydata_sphinx_theme"
-github_repo = "argocd-ioc-monitor"
+github_repo = "argocd-monitor"
 github_user = "epics-containers"
 switcher_json = f"https://{github_user}.github.io/{github_repo}/switcher.json"
 switcher_exists = requests.get(switcher_json).ok
