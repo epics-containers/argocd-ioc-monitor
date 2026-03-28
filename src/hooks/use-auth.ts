@@ -11,7 +11,8 @@ export function useAuth() {
 
   return {
     user: query.data,
-    isLoading: query.isLoading,
+    // Use isFetching so loading is true during refetches, not just initial load
+    isLoading: query.isFetching,
     isAuthenticated: query.data?.loggedIn ?? false,
     error: query.error,
   };
