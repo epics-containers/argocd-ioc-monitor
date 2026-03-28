@@ -34,6 +34,10 @@ export function clearStoredToken(): void {
   notifyTokenChange();
 }
 
+export function getStoredRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_KEY);
+}
+
 export function onAuthFailure(): void {
   clearStoredToken();
 }
