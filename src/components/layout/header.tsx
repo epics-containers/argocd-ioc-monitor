@@ -29,7 +29,7 @@ export function Header() {
           className="flex items-center gap-2 hover:opacity-80"
         >
           <Activity className="h-5 w-5 text-primary" />
-          <h1 className="text-lg font-semibold">IOC Monitor</h1>
+          <h1 className="text-lg font-semibold">ArgoCD Monitor</h1>
         </button>
         <div className="flex items-center gap-3">
           {user?.username && (
