@@ -41,7 +41,9 @@ export async function deletePod(
 ): Promise<void> {
   const params = new URLSearchParams({
     name: podName,
+    resourceName: podName,
     namespace,
+    group: "",
     kind: "Pod",
     version: "v1",
     force: "false",
