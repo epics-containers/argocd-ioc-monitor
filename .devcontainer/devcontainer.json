@@ -9,9 +9,6 @@
   "remoteEnv": {
     // Disable SSH agent forwarding to prevent prompt injection from using SSH keys
     "SSH_AUTH_SOCK": "",
-    // Prevent Git from reading system config or prompting for credentials
-    "GIT_CONFIG_NOSYSTEM": "1",
-    "GIT_TERMINAL_PROMPT": "0",
     // Put things that allow it in the persistent cache
     "PRE_COMMIT_HOME": "/cache/pre-commit",
     "UV_CACHE_DIR": "/cache/uv",
@@ -27,8 +24,12 @@
   "customizations": {
     "vscode": {
       "settings": {
-        "remote.containers.copyGitConfig": false,
-        "remote.containers.gitCredentialHelperConfigLocation": "none"
+        // NOTE: these are host-side settings and have no effect inside the
+        // container. They are kept here as documentation; set them in your
+        // host VS Code settings for defence-in-depth. The real guard is
+        // `git config --global credential.helper ''` in postCreate.sh.
+        "dev.containers.copyGitConfig": false,
+        "dev.containers.gitCredentialHelperConfigLocation": "none"
       },
       "extensions": [
         "dbaeumer.vscode-eslint",
@@ -64,6 +65,12 @@
     {
       "source": "${localEnv:HOME}/.config/terminal-config",
       "target": "/user-terminal-config",
+      "type": "bind"
+    },
+    // Mount host gitconfig read-only so postCreate can extract safe keys (user.name/email)
+    {
+      "source": "${localEnv:HOME}/.gitconfig",
+      "target": "/tmp/host-gitconfig",
       "type": "bind"
     }
   ],
