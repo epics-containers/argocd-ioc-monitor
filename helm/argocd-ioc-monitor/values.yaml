@@ -10,7 +10,6 @@ argocd:
   url: https://argocd.diamond.ac.uk
 
 service:
-  type: ClusterIP
   port: 80
 
 ingress:

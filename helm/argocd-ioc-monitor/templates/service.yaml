@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "argocd-ioc-monitor.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ if .Values.ingress.enabled }}ClusterIP{{ else }}LoadBalancer{{ end }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: http
