@@ -1,8 +1,8 @@
-{{- define "argocd-ioc-monitor.name" -}}
+{{- define "argocd-monitor.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "argocd-ioc-monitor.fullname" -}}
+{{- define "argocd-monitor.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -15,13 +15,13 @@
 {{- end }}
 {{- end }}
 
-{{- define "argocd-ioc-monitor.labels" -}}
+{{- define "argocd-monitor.labels" -}}
 helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-{{ include "argocd-ioc-monitor.selectorLabels" . }}
+{{ include "argocd-monitor.selectorLabels" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{- define "argocd-ioc-monitor.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "argocd-ioc-monitor.name" . }}
+{{- define "argocd-monitor.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "argocd-monitor.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

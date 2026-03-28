@@ -17,7 +17,7 @@ Key configuration values for production deployment:
 | Value | Description | Default |
 |-------|-------------|---------|
 | `argocd.url` | ArgoCD instance URL | `https://argocd.diamond.ac.uk` |
-| `image.repository` | Container image repository | `ghcr.io/epics-containers/argocd-ioc-monitor` |
+| `image.repository` | Container image repository | `ghcr.io/epics-containers/argocd-monitor` |
 | `image.tag` | Container image tag | `appVersion` from Chart.yaml |
 | `ingress.enabled` | Enable ingress | `false` |
 | `ingress.host` | Ingress hostname | (none) |

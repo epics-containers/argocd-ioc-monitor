@@ -37,7 +37,7 @@ wheels = [
 ]
 
 [[package]]
-name = "argocd-ioc-monitor"
+name = "argocd-monitor"
 version = "0.0.0"
 source = { virtual = "." }
 dependencies = [

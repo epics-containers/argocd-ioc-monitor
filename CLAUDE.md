@@ -1,0 +1,50 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Build and Development Commands
+
+```bash
+npm run dev          # Start Vite dev server on http://localhost:5173
+npm run build        # Type check (tsc -b) then Vite production build
+npm run lint         # ESLint with type-aware rules (all files)
+npx tsc --noEmit     # Type check only
+uv run tox -p        # Run all pre-commit checks in parallel
+uv run tox -e docs   # Build Sphinx documentation
+```
+
+Pre-commit hooks run automatically on commit: ESLint with `--fix`, `tsc --noEmit`, gitleaks, YAML validation, and end-of-file fixing. **If you changed documentation, also run `uv run tox -e docs` to verify the Sphinx build.**
+
+## Architecture
+
+React 19 + TypeScript + Vite SPA that monitors ArgoCD applications via its REST API. Uses TanStack React Query for server state and React Router for navigation.
+
+### Data Flow
+
+API clients (`src/api/`) → React Query hooks (`src/hooks/`) → Page components (`src/pages/`)
+
+- `argocdFetch<T>()` and `argocdFetchStream()` in `argocd-client.ts` handle all HTTP requests, including automatic token refresh on 401 via a singleton promise to prevent races
+- Hooks wrap API calls with React Query for caching, refetching, and mutations
+- Pages compose hooks and pass data to presentational components
+
+### Routes
+
+- `/` → `ApplicationsPage` — sortable/filterable table of all ArgoCD apps
+- `/apps/:name` → `ApplicationDetailPage` — app metadata, pod table with images/age/health
+- `/apps/:name/logs/:podName` → `LogsPage` — streaming pod logs with container selection
+
+### Auth
+
+Token management lives in `src/lib/auth-token.ts`. Tokens are stored in localStorage and synced to cookies. The `AuthGate` in `App.tsx` shows a `TokenDialog` when no token is present. On 401, the client attempts refresh via `/api/v1/session` before clearing credentials.
+
+### Key Conventions
+
+- UI primitives in `src/components/ui/` are shadcn-style — edit but don't rewrite
+- ESLint uses `recommendedTypeChecked` — all promises must be handled (use `void` for fire-and-forget)
+- `import.meta.env` values are `any` — cast to `string` when accessing
+- Helm charts live in `helm/argocd-monitor/` and `Charts/argocd-monitor/`
+- Dev proxy in `vite.config.ts` forwards `/api/` and `/auth/` to ArgoCD
+
+## Deployment
+
+Docker container with nginx serving the SPA and proxying API requests. Helm chart published to `oci://ghcr.io/epics-containers/charts/argocd-monitor`. CI runs lint → container build → helm package → docs publish.
