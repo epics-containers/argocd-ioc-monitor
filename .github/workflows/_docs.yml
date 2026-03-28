@@ -15,16 +15,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Install doc dependencies
-        run: pip install -r docs/requirements.txt
+        run: uv sync --extra docs
 
       - name: Build docs
-        run: sphinx-build --fresh-env --fail-on-warning docs build/html
+        run: uv run sphinx-build --fresh-env --fail-on-warning docs build/html
 
       - name: Remove environment.pickle
         run: rm -f build/html/.doctrees/environment.pickle
