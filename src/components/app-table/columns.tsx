@@ -1,9 +1,22 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Link } from "react-router";
-import { ArrowUpDown, FileText } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HealthBadge, SyncBadge } from "./status-badge";
 import type { Application } from "@/types/application";
+
+/** Label prefixes to strip from display for brevity. */
+const STRIP_PREFIXES = ["argocd.argoproj.io/"];
+
+/** Labels to hide from the Properties column. */
+const HIDDEN_LABELS = new Set(["argocd.argoproj.io/instance"]);
+
+function formatLabelKey(key: string): string {
+  for (const prefix of STRIP_PREFIXES) {
+    if (key.startsWith(prefix)) return key.slice(prefix.length);
+  }
+  return key;
+}
 
 export const columns: ColumnDef<Application>[] = [
   {
@@ -70,28 +83,32 @@ export const columns: ColumnDef<Application>[] = [
     ),
   },
   {
-    accessorFn: (row) => row.spec.project,
-    id: "project",
-    header: "Project",
-    cell: ({ getValue }) => (
-      <span className="text-muted-foreground">{getValue() as string}</span>
-    ),
-  },
-  {
-    id: "actions",
-    header: "",
+    accessorFn: (row) =>
+      Object.entries(row.metadata.labels ?? {})
+        .filter(([k]) => !HIDDEN_LABELS.has(k))
+        .map(([k, v]) => `${k}=${v}`)
+        .join(" "),
+    id: "properties",
+    header: "Properties",
     cell: ({ row }) => {
-      const name = row.original.metadata.name;
-      const appNamespace = row.original.metadata.namespace;
+      const labels = row.original.metadata.labels;
+      const entries = Object.entries(labels ?? {}).filter(
+        ([k]) => !HIDDEN_LABELS.has(k),
+      );
+      if (entries.length === 0) {
+        return <span className="text-muted-foreground">-</span>;
+      }
       return (
-        <div className="flex justify-end">
-          <Link
-            to={`/apps/${encodeURIComponent(name)}?appNamespace=${encodeURIComponent(appNamespace)}`}
-            className="inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-sm font-medium hover:bg-muted"
-          >
-            <FileText className="h-4 w-4" />
-            Details
-          </Link>
+        <div className="flex flex-wrap gap-1">
+          {entries.map(([key, value]) => (
+            <span
+              key={key}
+              className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
+              title={`${key}=${value}`}
+            >
+              {formatLabelKey(key)}={value}
+            </span>
+          ))}
         </div>
       );
     },

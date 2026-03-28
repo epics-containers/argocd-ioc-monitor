@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router";
 import {
   type ColumnDef,
   type SortingState,
@@ -29,9 +30,13 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
+  const globalFilter = searchParams.get("q") ?? "";
+  const setGlobalFilter = (value: string) => {
+    setSearchParams(value ? { q: value } : {}, { replace: true });
+  };
 
   const table = useReactTable({
     data,
