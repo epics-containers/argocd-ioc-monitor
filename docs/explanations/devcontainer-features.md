@@ -1,7 +1,9 @@
 # Devcontainer Features
 
 This project uses a [Dev Container](https://containers.dev/) to provide a
-fully configured, reproducible development environment. The setup is derived
+fully configured, reproducible development environment. The intended runtime
+is **rootless Podman** (or rootless Docker) — the security assumptions in
+this document rely on unprivileged container execution. The setup is derived
 from the
 [python-copier-template](https://github.com/diamondlightsource/python-copier-template)
 pattern used across Diamond Light Source projects, extended for a TypeScript
