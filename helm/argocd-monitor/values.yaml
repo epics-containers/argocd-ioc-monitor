@@ -10,6 +10,7 @@ argocd:
   url: https://argocd.diamond.ac.uk
 
 service:
+  type: LoadBalancer
   port: 80
 
 ingress:
