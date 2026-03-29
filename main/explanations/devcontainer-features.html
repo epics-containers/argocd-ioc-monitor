@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Devcontainer Features &#8212; argocd-monitor 0.1.3-8-ga2e3736 documentation</title>
+    <title>Devcontainer Features &#8212; argocd-monitor 0.1.4-5-g32f0bcc documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=eec31ba0"></script>
+    <script src="../_static/documentation_options.js?v=4b1103d5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -879,6 +879,8 @@ project-specific tooling on first launch:</p>
 <ul class="simple">
 <li><p><strong>Node.js 22</strong> for the React/TypeScript frontend</p></li>
 <li><p><strong>Claude Code CLI</strong> for AI-assisted development</p></li>
+<li><p><strong>just</strong> task runner for unified dev commands</p></li>
+<li><p><strong>GitHub CLI</strong> (<code class="docutils literal notranslate"><span class="pre">gh</span></code>) for push/PR workflows</p></li>
 <li><p><strong>npm dependencies</strong> via <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">install</span></code></p></li>
 <li><p><strong>Python dependencies</strong> via <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">sync</span> <span class="pre">--all-extras</span></code></p></li>
 <li><p><strong>Pre-commit hooks</strong> installed and ready</p></li>
@@ -983,13 +985,15 @@ where synchronous callbacks are expected</p></li>
 <p>VS Code is configured (<code class="docutils literal notranslate"><span class="pre">.vscode/settings.json</span></code>) to run ESLint validation on
 TypeScript files and auto-fix on save.</p>
 </section>
-<section id="tox-task-runner">
-<h3>Tox Task Runner<a class="headerlink" href="#tox-task-runner" title="Link to this heading">#</a></h3>
-<p><a class="reference external" href="https://tox.wiki/">Tox</a> provides reproducible task execution for Python-side
-tooling:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>run<span class="w"> </span>tox<span class="w"> </span>-p<span class="w">          </span><span class="c1"># Run all checks in parallel</span>
-uv<span class="w"> </span>run<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>pre-commit<span class="w">  </span><span class="c1"># Run pre-commit hooks on all files</span>
-uv<span class="w"> </span>run<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>docs<span class="w">     </span><span class="c1"># Build Sphinx documentation</span>
+<section id="just-task-runner">
+<h3>Just Task Runner<a class="headerlink" href="#just-task-runner" title="Link to this heading">#</a></h3>
+<p><a class="reference external" href="https://just.systems/">just</a> provides a unified command interface for all
+development tasks (both JavaScript and Python tooling):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just<span class="w"> </span>check<span class="w">       </span><span class="c1"># Run lint, test, docs in parallel — do this before committing</span>
+just<span class="w"> </span>lint<span class="w">        </span><span class="c1"># ESLint + TypeScript type check</span>
+just<span class="w"> </span><span class="nb">test</span><span class="w">        </span><span class="c1"># Run vitest with coverage</span>
+just<span class="w"> </span>docs<span class="w">        </span><span class="c1"># Build Sphinx documentation</span>
+just<span class="w"> </span>dev<span class="w">         </span><span class="c1"># Start Vite dev server</span>
 </pre></div>
 </div>
 </section>
@@ -1006,7 +1010,7 @@ extensions provide:</p>
 <li><p><strong>Grid layouts</strong> via <code class="docutils literal notranslate"><span class="pre">sphinx_design</span></code></p></li>
 </ul>
 <p>A live-rebuild mode is available for local development:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>run<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>docs-autobuild
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just<span class="w"> </span>docs-watch
 </pre></div>
 </div>
 <section id="multi-version-publishing">
@@ -1027,10 +1031,10 @@ orchestrated by <code class="docutils literal notranslate"><span class="pre">ci.
     push --&gt; docs[_docs.yml]
     lint --&gt; container[_container.yml]
     lint --&gt; helm[_helm.yml]
-    </pre><section id="lint-lint-yml">
-<h3>Lint (<code class="docutils literal notranslate"><span class="pre">_lint.yml</span></code>)<a class="headerlink" href="#lint-lint-yml" title="Link to this heading">#</a></h3>
-<p>Runs ESLint and TypeScript type checking on every push and PR. This is the
-gate for all other workflows.</p>
+    </pre><section id="lint-test-lint-yml">
+<h3>Lint &amp; Test (<code class="docutils literal notranslate"><span class="pre">_lint.yml</span></code>)<a class="headerlink" href="#lint-test-lint-yml" title="Link to this heading">#</a></h3>
+<p>Runs ESLint, TypeScript type checking, and vitest with coverage on every
+push and PR. This is the gate for all other workflows.</p>
 </section>
 <section id="container-container-yml">
 <h3>Container (<code class="docutils literal notranslate"><span class="pre">_container.yml</span></code>)<a class="headerlink" href="#container-container-yml" title="Link to this heading">#</a></h3>
@@ -1146,7 +1150,7 @@ configuration and memory persist across container rebuilds.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linting-and-type-checking">Linting and Type Checking</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-commit-hooks">Pre-commit Hooks</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#type-aware-eslint">Type-Aware ESLint</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tox-task-runner">Tox Task Runner</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#just-task-runner">Just Task Runner</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a><ul class="nav section-nav flex-column">
@@ -1154,7 +1158,7 @@ configuration and memory persist across container rebuilds.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ci-cd-pipeline">CI/CD Pipeline</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lint-lint-yml">Lint (<code class="docutils literal notranslate"><span class="pre">_lint.yml</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#lint-test-lint-yml">Lint &amp; Test (<code class="docutils literal notranslate"><span class="pre">_lint.yml</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#container-container-yml">Container (<code class="docutils literal notranslate"><span class="pre">_container.yml</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#helm-helm-yml">Helm (<code class="docutils literal notranslate"><span class="pre">_helm.yml</span></code>)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#docs-docs-yml">Docs (<code class="docutils literal notranslate"><span class="pre">_docs.yml</span></code>)</a></li>

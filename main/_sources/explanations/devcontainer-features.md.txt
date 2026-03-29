@@ -16,6 +16,8 @@ project-specific tooling on first launch:
 
 - **Node.js 22** for the React/TypeScript frontend
 - **Claude Code CLI** for AI-assisted development
+- **just** task runner for unified dev commands
+- **GitHub CLI** (`gh`) for push/PR workflows
 - **npm dependencies** via `npm install`
 - **Python dependencies** via `uv sync --all-extras`
 - **Pre-commit hooks** installed and ready
@@ -99,15 +101,17 @@ This catches issues that basic linting misses:
 VS Code is configured (`.vscode/settings.json`) to run ESLint validation on
 TypeScript files and auto-fix on save.
 
-### Tox Task Runner
+### Just Task Runner
 
-[Tox](https://tox.wiki/) provides reproducible task execution for Python-side
-tooling:
+[just](https://just.systems/) provides a unified command interface for all
+development tasks (both JavaScript and Python tooling):
 
 ```bash
-uv run tox -p          # Run all checks in parallel
-uv run tox -e pre-commit  # Run pre-commit hooks on all files
-uv run tox -e docs     # Build Sphinx documentation
+just check       # Run lint, test, docs in parallel — do this before committing
+just lint        # ESLint + TypeScript type check
+just test        # Run vitest with coverage
+just docs        # Build Sphinx documentation
+just dev         # Start Vite dev server
 ```
 
 ## Documentation
@@ -124,7 +128,7 @@ extensions provide:
 A live-rebuild mode is available for local development:
 
 ```bash
-uv run tox -e docs-autobuild
+just docs-watch
 ```
 
 ### Multi-Version Publishing
@@ -147,10 +151,10 @@ graph LR
     lint --> helm[_helm.yml]
 ```
 
-### Lint (`_lint.yml`)
+### Lint & Test (`_lint.yml`)
 
-Runs ESLint and TypeScript type checking on every push and PR. This is the
-gate for all other workflows.
+Runs ESLint, TypeScript type checking, and vitest with coverage on every
+push and PR. This is the gate for all other workflows.
 
 ### Container (`_container.yml`)
 
