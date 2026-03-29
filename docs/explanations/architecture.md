@@ -12,7 +12,7 @@ graph LR
     Nginx -->|/api/| ArgoCD
     Nginx -->|/auth/| ArgoCD
     Nginx -->|/*| SPA[React SPA]
-    ArgoCD -->|OIDC| Keycloak
+    ArgoCD -.->|OIDC planned| Keycloak
 ```
 
 ## Stack
@@ -26,10 +26,15 @@ graph LR
 
 ## Authentication
 
-The app delegates authentication entirely to ArgoCD. When a user is not
-authenticated, API calls return 401 and the app redirects to ArgoCD's
-login page, which in turn uses Keycloak for OIDC authentication. The
-resulting `argocd.token` cookie is used for all subsequent API requests.
+Currently the app uses manually-pasted ArgoCD tokens. Users run
+`argocd login --sso` to authenticate via Keycloak, then copy the
+`auth-token` and `refresh-token` from `~/.config/argocd/config` into
+the app's login dialog. Tokens are stored in localStorage and synced
+to cookies for API requests.
+
+**Planned:** Direct OIDC authentication via Keycloak so users log in
+through the browser without manual token handling. See
+{doc}`oidc-auth-plan` for details.
 
 ## Deployment
 
