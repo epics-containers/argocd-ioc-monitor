@@ -85,7 +85,7 @@ extensions for Mermaid diagrams, copy buttons, and grid layouts.
 
 ## Persistent Caches
 
-The devcontainer uses Docker volumes for persistence across container rebuilds:
+The devcontainer uses container volumes for persistence across rebuilds:
 
 | Volume                           | Mount       | Purpose                          |
 | -------------------------------- | ----------- | -------------------------------- |
@@ -96,6 +96,26 @@ The workspace-specific venv path
 (`/cache/venv-for${localWorkspaceFolder}`) prevents conflicts when multiple
 projects share the cache volume. Environment variables (`VIRTUAL_ENV`, `PATH`)
 activate the venv automatically so `uv run` is not needed for every command.
+
+### GitHub CLI credentials in a volume
+
+The `gh-auth` volume stores a fine-grained PAT (set up via
+`gh auth login` + `gh auth setup-git`). This is safe under rootless Podman,
+which is the intended runtime for this devcontainer:
+
+- **No daemon socket** — there is no privileged Docker socket to compromise.
+  Each developer runs their own unprivileged `podman` process.
+- **User-owned storage** — volumes live under
+  `~/.local/share/containers/storage/volumes/`, owned by the host user with
+  standard file permissions. Accessing them requires the user's login
+  credentials.
+- **User namespace isolation** — container processes run in a subordinate UID
+  range, so even a container escape lands in an unprivileged namespace.
+- **Scoped PATs** — fine-grained tokens are limited to specific repositories,
+  reducing blast radius if a token is ever leaked.
+
+The PAT in the volume is effectively as secure as any other file in the
+user's home directory (e.g. `~/.ssh/`, browser cookies).
 
 ## Workspace Mounting
 
