@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Nginx Configuration &#8212; argocd-monitor 0.3.1-1-gf9304fc documentation</title>
+    <title>Nginx Configuration &#8212; argocd-monitor 0.3.1-2-gc3beb42 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=60ffae04"></script>
+    <script src="../_static/documentation_options.js?v=695885b9"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -502,12 +502,12 @@ resolve the hostname at request time rather than at startup. This means
 nginx can start even if the ArgoCD server is temporarily unreachable.</p>
 <p>Two resolvers are configured:</p>
 <ul class="simple">
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">127.0.0.11</span></code></strong> – The built-in DNS resolver provided by Docker’s
-embedded DNS server. Inside a Docker or Kubernetes network this resolves
-internal service names.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">127.0.0.11</span></code></strong> – The built-in DNS resolver provided by the container
+runtime’s embedded DNS server (Podman or Docker). Inside a container
+network or Kubernetes cluster this resolves internal service names.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">8.8.8.8</span></code></strong> – Google’s public DNS, used as a fallback. If the
 ArgoCD URL points to an external hostname (not a cluster-internal
-service), the Docker-internal resolver may not be able to resolve it.
+service), the container-internal resolver may not be able to resolve it.
 The external fallback ensures resolution still works.</p></li>
 </ul>
 <p>The <code class="docutils literal notranslate"><span class="pre">valid=30s</span></code> parameter caches DNS results for 30 seconds, balancing
@@ -517,7 +517,7 @@ responsiveness to DNS changes against query volume.</p>
 <p>When deployed via the Helm chart, the ConfigMap renders the ArgoCD URL
 directly into <code class="docutils literal notranslate"><span class="pre">proxy_pass</span></code> directives (no variable or resolver), because
 the Kubernetes DNS service handles resolution and the URL is known at
-deploy time. The resolver configuration only applies to standalone Docker
+deploy time. The resolver configuration only applies to standalone container
 usage.</p>
 </div>
 </section>

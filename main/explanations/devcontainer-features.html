@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Devcontainer Features &#8212; argocd-monitor 0.3.1-1-gf9304fc documentation</title>
+    <title>Devcontainer Features &#8212; argocd-monitor 0.3.1-2-gc3beb42 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=60ffae04"></script>
+    <script src="../_static/documentation_options.js?v=695885b9"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -432,7 +432,9 @@
   <section id="devcontainer-features">
 <h1>Devcontainer Features<a class="headerlink" href="#devcontainer-features" title="Link to this heading">#</a></h1>
 <p>This project uses a <a class="reference external" href="https://containers.dev/">Dev Container</a> to provide a
-fully configured, reproducible development environment. The setup is derived
+fully configured, reproducible development environment. The intended runtime
+is <strong>rootless Podman</strong> (or rootless Docker) — the security assumptions in
+this document rely on unprivileged container execution. The setup is derived
 from the
 <a class="reference external" href="https://github.com/diamondlightsource/python-copier-template">python-copier-template</a>
 pattern used across Diamond Light Source projects, extended for a TypeScript
@@ -475,7 +477,7 @@ explicit fine-grained PAT via <code class="docutils literal notranslate"><span c
 </ul>
 <p><strong>Scoped GitHub authentication:</strong></p>
 <ul class="simple">
-<li><p>GitHub CLI auth is persisted in a per-repo Docker volume
+<li><p>GitHub CLI auth is persisted in a per-repo container volume
 (<code class="docutils literal notranslate"><span class="pre">gh-auth-${localWorkspaceFolderBasename}</span></code>)</p></li>
 <li><p>Use a fine-grained PAT scoped to only the repositories needed, rather than a
 broad OAuth token</p></li>
@@ -514,7 +516,7 @@ extensions for Mermaid diagrams, copy buttons, and grid layouts.</p>
 </section>
 <section id="persistent-caches">
 <h2>Persistent Caches<a class="headerlink" href="#persistent-caches" title="Link to this heading">#</a></h2>
-<p>The devcontainer uses Docker volumes for persistence across container rebuilds:</p>
+<p>The devcontainer uses container volumes for persistence across rebuilds:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Volume</p></th>
@@ -538,6 +540,26 @@ extensions for Mermaid diagrams, copy buttons, and grid layouts.</p>
 (<code class="docutils literal notranslate"><span class="pre">/cache/venv-for${localWorkspaceFolder}</span></code>) prevents conflicts when multiple
 projects share the cache volume. Environment variables (<code class="docutils literal notranslate"><span class="pre">VIRTUAL_ENV</span></code>, <code class="docutils literal notranslate"><span class="pre">PATH</span></code>)
 activate the venv automatically so <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">run</span></code> is not needed for every command.</p>
+<section id="github-cli-credentials-in-a-volume">
+<h3>GitHub CLI credentials in a volume<a class="headerlink" href="#github-cli-credentials-in-a-volume" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">gh-auth</span></code> volume stores a fine-grained PAT (set up via
+<code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">auth</span> <span class="pre">login</span></code> + <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">auth</span> <span class="pre">setup-git</span></code>). This is safe under rootless Podman,
+which is the intended runtime for this devcontainer:</p>
+<ul class="simple">
+<li><p><strong>No daemon socket</strong> — there is no privileged Docker socket to compromise.
+Each developer runs their own unprivileged <code class="docutils literal notranslate"><span class="pre">podman</span></code> process.</p></li>
+<li><p><strong>User-owned storage</strong> — volumes live under
+<code class="docutils literal notranslate"><span class="pre">~/.local/share/containers/storage/volumes/</span></code>, owned by the host user with
+standard file permissions. Accessing them requires the user’s login
+credentials.</p></li>
+<li><p><strong>User namespace isolation</strong> — container processes run in a subordinate UID
+range, so even a container escape lands in an unprivileged namespace.</p></li>
+<li><p><strong>Scoped PATs</strong> — fine-grained tokens are limited to specific repositories,
+reducing blast radius if a token is ever leaked.</p></li>
+</ul>
+<p>The PAT in the volume is effectively as secure as any other file in the
+user’s home directory (e.g. <code class="docutils literal notranslate"><span class="pre">~/.ssh/</span></code>, browser cookies).</p>
+</section>
 </section>
 <section id="workspace-mounting">
 <h2>Workspace Mounting<a class="headerlink" href="#workspace-mounting" title="Link to this heading">#</a></h2>
@@ -605,7 +627,10 @@ configuration and memory persist across container rebuilds.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linting-testing-and-ci-cd">Linting, Testing, and CI/CD</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#persistent-caches">Persistent Caches</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#persistent-caches">Persistent Caches</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#github-cli-credentials-in-a-volume">GitHub CLI credentials in a volume</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#workspace-mounting">Workspace Mounting</a></li>
 </ul>
   </nav></div>
