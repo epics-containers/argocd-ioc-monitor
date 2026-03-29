@@ -1,6 +1,11 @@
 #!/bin/sh
 set -e
 
+# If the config is already mounted (e.g. by Helm ConfigMap), skip envsubst
+if [ ! -w /etc/nginx/conf.d/default.conf ] 2>/dev/null; then
+    exec nginx -g 'daemon off;'
+fi
+
 # Default to Diamond's ArgoCD instance
 ARGOCD_URL="${ARGOCD_URL:-https://argocd.diamond.ac.uk}"
 # Strip protocol to get hostname for Host header
