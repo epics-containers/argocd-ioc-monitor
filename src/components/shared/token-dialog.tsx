@@ -41,7 +41,7 @@ export function TokenDialog({ open, onTokenSubmit }: TokenDialogProps) {
           <div className="my-4 flex flex-col gap-3">
             <pre className="rounded-md bg-muted p-2 text-xs whitespace-pre-wrap">
 {`module load ec
-argocd login argocd.diamond.ac.uk --grpc-web --sso
+argocd login ${(import.meta.env.VITE_ARGOCD_HOST as string) || "argocd.diamond.ac.uk"} --grpc-web --sso
 cat ~/.config/argocd/config`}
             </pre>
             <p className="text-xs text-muted-foreground">
