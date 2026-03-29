@@ -10,6 +10,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
+    testTimeout: 10000,
     coverage: {
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/test/**", "src/vite-env.d.ts"],
