@@ -19,42 +19,4 @@ docs = [
 ]
 
 [dependency-groups]
-dev = [
-    "tox",
-    "tox-uv",
-]
-
-[tool.tox]
-skipsdist = true
-env_list = ["pre-commit", "tests", "docs"]
-
-[tool.tox.env_run_base]
-passenv = ["*"]
-
-[tool.tox.env.pre-commit]
-description = "Run pre-commit on all files"
-skip_install = true
-deps = ["pre-commit"]
-commands = [["pre-commit", "run", "--all-files", "--show-diff-on-failure"]]
-
-[tool.tox.env.tests]
-description = "Run JavaScript tests with vitest"
-skip_install = true
-allowlist_externals = ["npm"]
-commands = [["npm", "run", "test:coverage"]]
-
-[tool.tox.env.docs]
-description = "Build Sphinx documentation"
-skip_install = true
-deps = ["sphinx", "pydata-sphinx-theme", "myst-parser", "sphinx-copybutton", "sphinx-design", "sphinxcontrib-mermaid"]
-commands = [
-    ["sphinx-build", "--fresh-env", "--show-traceback", "--fail-on-warning", "--keep-going", "docs", "build/html"],
-]
-
-[tool.tox.env.docs-autobuild]
-description = "Run docs with autobuild on change"
-skip_install = true
-deps = ["sphinx", "pydata-sphinx-theme", "myst-parser", "sphinx-copybutton", "sphinx-design", "sphinxcontrib-mermaid", "sphinx-autobuild"]
-commands = [
-    ["sphinx-autobuild", "--show-traceback", "--watch", "README.md", "docs", "build/html"],
-]
+dev = []

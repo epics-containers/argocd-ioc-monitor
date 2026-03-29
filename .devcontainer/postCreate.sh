@@ -9,6 +9,9 @@ git config --global credential.helper ''
 # Install Claude Code CLI
 curl -fsSL https://claude.ai/install.sh | bash
 
+# Install just task runner
+curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+
 # Install Node.js 22
 apt-get update -y
 apt-get install -y --no-install-recommends curl
