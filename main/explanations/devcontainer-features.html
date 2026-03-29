@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Devcontainer Features &#8212; argocd-monitor 0.1.4-5-g32f0bcc documentation</title>
+    <title>Devcontainer Features &#8212; argocd-monitor 0.1.4-9-g5b8ef3e documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=4b1103d5"></script>
+    <script src="../_static/documentation_options.js?v=bc23c1fa"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -988,7 +988,9 @@ TypeScript files and auto-fix on save.</p>
 <section id="just-task-runner">
 <h3>Just Task Runner<a class="headerlink" href="#just-task-runner" title="Link to this heading">#</a></h3>
 <p><a class="reference external" href="https://just.systems/">just</a> provides a unified command interface for all
-development tasks (both JavaScript and Python tooling):</p>
+development tasks (both JavaScript and Python tooling). Run <code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">--list</span></code>
+to see all available commands. See <a class="reference internal" href="../tutorials/developer-workflow.html"><span class="doc">Developer Workflow</span></a> for
+a full guide.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just<span class="w"> </span>check<span class="w">       </span><span class="c1"># Run lint, test, docs in parallel — do this before committing</span>
 just<span class="w"> </span>lint<span class="w">        </span><span class="c1"># ESLint + TypeScript type check</span>
 just<span class="w"> </span><span class="nb">test</span><span class="w">        </span><span class="c1"># Run vitest with coverage</span>

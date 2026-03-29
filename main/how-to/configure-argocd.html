@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Configure ArgoCD Connection &#8212; argocd-monitor 0.1.4-5-g32f0bcc documentation</title>
+    <title>Configure ArgoCD Connection &#8212; argocd-monitor 0.1.4-9-g5b8ef3e documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=4b1103d5"></script>
+    <script src="../_static/documentation_options.js?v=bc23c1fa"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -431,9 +431,12 @@
 <p>In development, the Vite dev server proxies API requests to ArgoCD.
 You need an auth token from the ArgoCD instance.</p>
 <ol class="arabic">
-<li><p>Log in to your ArgoCD instance in the browser.</p></li>
-<li><p>Open DevTools &gt; Application &gt; Cookies.</p></li>
-<li><p>Copy the <code class="docutils literal notranslate"><span class="pre">argocd.token</span></code> cookie value.</p></li>
+<li><p>Log in via the ArgoCD CLI:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>argocd<span class="w"> </span>login<span class="w"> </span>argocd.diamond.ac.uk<span class="w"> </span>--grpc-web<span class="w"> </span>--sso
+</pre></div>
+</div>
+</li>
+<li><p>Copy the <code class="docutils literal notranslate"><span class="pre">auth-token</span></code> from <code class="docutils literal notranslate"><span class="pre">~/.config/argocd/config</span></code>.</p></li>
 <li><p>Set it in your <code class="docutils literal notranslate"><span class="pre">.env</span></code> file:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">ARGOCD_AUTH_TOKEN</span><span class="o">=</span>&lt;your-token&gt;
 </pre></div>
@@ -441,6 +444,9 @@ You need an auth token from the ArgoCD instance.</p>
 </li>
 <li><p>Restart the dev server.</p></li>
 </ol>
+<p>If your ArgoCD instance is at a different hostname, also set
+<code class="docutils literal notranslate"><span class="pre">VITE_ARGOCD_HOST</span></code> in <code class="docutils literal notranslate"><span class="pre">.env</span></code> — this updates the login instructions
+shown in the app’s token dialog.</p>
 </section>
 <section id="production">
 <h2>Production<a class="headerlink" href="#production" title="Link to this heading">#</a></h2>
@@ -450,8 +456,9 @@ configured via the Helm chart’s <code class="docutils literal notranslate"><sp
 <span class="w">  </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://argocd.diamond.ac.uk</span>
 </pre></div>
 </div>
-<p>Authentication flows through ArgoCD’s OIDC/Keycloak integration
-automatically via cookie-based sessions.</p>
+<p>Users currently authenticate by pasting tokens into the app’s login
+dialog. OIDC authentication via Keycloak is planned — see
+<a class="reference internal" href="../explanations/oidc-auth-plan.html"><span class="doc">OIDC Authentication via Keycloak</span></a>.</p>
 </section>
 </section>
 
