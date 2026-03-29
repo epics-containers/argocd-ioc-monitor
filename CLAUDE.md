@@ -44,7 +44,7 @@ Token management lives in `src/lib/auth-token.ts`. Tokens are stored in localSto
 - UI primitives in `src/components/ui/` are shadcn-style — edit but don't rewrite
 - ESLint uses `recommendedTypeChecked` — all promises must be handled (use `void` for fire-and-forget)
 - `import.meta.env` values are `any` — cast to `string` when accessing
-- Helm charts live in `helm/argocd-monitor/` and `Charts/argocd-monitor/`
+- Helm chart lives in `helm/argocd-monitor/`
 - Dev proxy in `vite.config.ts` forwards `/api/` and `/auth/` to ArgoCD
 
 ## Deployment

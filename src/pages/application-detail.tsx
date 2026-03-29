@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router";
 import { ArrowLeft, RotateCcw, ScrollText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,10 @@ export function ApplicationDetailPage() {
   const [restartError, setRestartError] = useState<string | null>(null);
   const tableFilters = sessionStorage.getItem("tableFilters");
   const backTo = tableFilters ? `/?${tableFilters}` : "/";
+  const pods = useMemo(
+    () => tree?.nodes?.filter((n) => n.kind === "Pod") ?? [],
+    [tree?.nodes],
+  );
 
   if (appLoading || treeLoading) {
     return <LoadingSpinner message="Loading application..." />;
@@ -44,7 +48,6 @@ export function ApplicationDetailPage() {
     );
   }
 
-  const pods = tree?.nodes?.filter((n) => n.kind === "Pod") ?? [];
   const namespace = app.spec.destination.namespace ?? "";
 
   return (

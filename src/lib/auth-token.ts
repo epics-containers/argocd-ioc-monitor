@@ -1,12 +1,18 @@
 const TOKEN_KEY = "argocd-token";
 const REFRESH_KEY = "argocd-refresh-token";
 
+function isSecureContext() {
+  return location.protocol === "https:";
+}
+
 function setCookie(name: string, value: string) {
-  document.cookie = `${name}=${value};path=/;SameSite=Strict`;
+  const secure = isSecureContext() ? ";Secure" : "";
+  document.cookie = `${name}=${value};path=/;SameSite=Strict${secure}`;
 }
 
 function deleteCookie(name: string) {
-  document.cookie = `${name}=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+  const secure = isSecureContext() ? ";Secure" : "";
+  document.cookie = `${name}=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT${secure}`;
 }
 
 // Reactive token store — components can subscribe via useSyncExternalStore

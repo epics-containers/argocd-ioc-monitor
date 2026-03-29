@@ -8,6 +8,9 @@ These are used by the Vite dev server (set in `.env`):
 |----------|-------------|---------|
 | `ARGOCD_AUTH_TOKEN` | ArgoCD auth token cookie value for dev proxy | (required) |
 | `VITE_ARGOCD_PROJECT` | Filter to a specific ArgoCD project | (none) |
+| `VITE_ARGOCD_HOST` | ArgoCD hostname shown in login instructions | `argocd.diamond.ac.uk` |
+| `VITE_ARGOCD_BASE_URL` | Base URL prefix for API requests | `""` (same origin) |
+| `VITE_APP_VERSION` | Version shown in header (set by CI from git tag) | `dev` |
 | `VITE_REFRESH_INTERVAL` | Auto-refresh interval in milliseconds | `30000` |
 
 ## Helm Chart Values

@@ -7,6 +7,7 @@ import { ApplicationsPage } from "@/pages/applications";
 import { ApplicationDetailPage } from "@/pages/application-detail";
 import { LogsPage } from "@/pages/logs";
 import { TokenDialog } from "@/components/shared/token-dialog";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { subscribeToken, getTokenSnapshot } from "@/lib/auth-token";
 
 const queryClient = new QueryClient({
@@ -38,6 +39,7 @@ export default function App() {
       <TooltipProvider>
         <BrowserRouter>
           <AuthGate>
+            <ErrorBoundary>
             <Routes>
               <Route element={<Layout />}>
                 <Route index element={<ApplicationsPage />} />
@@ -48,6 +50,7 @@ export default function App() {
                 />
               </Route>
             </Routes>
+            </ErrorBoundary>
           </AuthGate>
         </BrowserRouter>
       </TooltipProvider>
