@@ -59,24 +59,10 @@ pods -- Kubernetes does not watch for ConfigMap content changes by default.
 ## How the ConfigMap renders the nginx config
 
 The ConfigMap template renders the full nginx server block at deploy time,
-substituting Helm values directly:
-
-```yaml
-proxy_pass {{ .Values.argocd.url }};
-proxy_set_header Host {{ .Values.argocd.url | trimPrefix "https://" | trimPrefix "http://" }};
-```
-
-This differs from the Docker entrypoint approach (which uses `envsubst` at
-container startup). In Kubernetes the URL is known at deploy time, so Helm
-bakes it into the config. The ConfigMap is mounted read-only at
-`/etc/nginx/conf.d/default.conf`, and the entrypoint's `envsubst` step
-silently skips (via `|| true`) since the file is already present and
-read-only.
-
-The ConfigMap version also omits the `resolver` directive because
-Kubernetes provides DNS resolution through kube-dns / CoreDNS, and the
-`proxy_pass` value is a literal URL rather than an nginx variable, so nginx
-resolves it at startup.
+substituting Helm values directly into `proxy_pass` and `proxy_set_header`
+directives. This differs from the Docker entrypoint approach which uses
+`envsubst` at container startup — see {doc}`/how-to/nginx-configuration`
+for details on both modes and the read-only fallback mechanism.
 
 ## Ingress and TLS configuration
 

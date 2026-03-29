@@ -73,9 +73,8 @@ This ensures that navigating away from a page does not leave orphaned connection
 
 ## API client and auth retry
 
-All HTTP calls flow through two functions in `src/api/argocd-client.ts`:
-
-- **`argocdFetch<T>`** -- for JSON request/response calls (list apps, get app, delete pod).
-- **`argocdFetchStream`** -- for streaming responses (logs).
-
-Both share the same 401-handling logic: on an authentication failure, they call `tryRefreshToken` (`src/api/argocd-client.ts:30-58`) to obtain a new session token. A **singleton promise** prevents concurrent requests from racing to refresh at the same time -- the first caller creates the promise, and subsequent callers await the same one (`src/api/argocd-client.ts:34`). After the refresh resolves, the original request is retried once. If it still fails with 401, `onAuthFailure` clears stored credentials and the `AuthGate` prompts the user to re-authenticate.
+All HTTP calls flow through `argocdFetch<T>` (JSON) and `argocdFetchStream`
+(streaming) in `src/api/argocd-client.ts`. Both share the same 401-handling
+logic: attempt a token refresh, then retry the request once. See
+{doc}`/explanations/auth-flow` for details on the singleton refresh promise
+and the token lifecycle.

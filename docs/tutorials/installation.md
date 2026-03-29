@@ -32,38 +32,10 @@ The easiest way to get started is using a [Dev Container](https://containers.dev
 
 ## Running Checks
 
-The project uses [just](https://just.systems/) as its task runner. Run all
-checks (lint, test, docs) in parallel before committing:
-
-```bash
-just check
-```
-
-See {doc}`developer-workflow` for details on all available commands.
+Before committing, run `just check` to lint, test, and build docs in
+parallel. See {doc}`developer-workflow` for the full set of commands.
 
 ## Production Deployment
 
-### Install from OCI registry
-
-The Helm chart is published to the GitHub Container Registry on each tagged
-release. Install directly from the OCI registry:
-
-```bash
-helm install argocd-monitor oci://ghcr.io/epics-containers/charts/argocd-monitor \
-  --set argocd.url=https://argocd.example.com \
-  --set ingress.enabled=true \
-  --set ingress.host=argocd-monitor.example.com
-```
-
-### Install from local chart
-
-Alternatively, install from the source tree:
-
-```bash
-helm install argocd-monitor helm/argocd-monitor \
-  --set argocd.url=https://argocd.example.com \
-  --set ingress.enabled=true \
-  --set ingress.host=argocd-monitor.example.com
-```
-
-See `helm/argocd-monitor/values.yaml` for the full list of configurable values.
+See {doc}`/how-to/helm-deployment` for Helm installation, configuration,
+and Ingress/TLS setup.
