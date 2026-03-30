@@ -56,7 +56,7 @@ Controls what Claude Code is allowed to do. The key sections:
 {
   "permissions": {
     "allow": ["Read", "Edit", "Write", "Bash(*)", "WebSearch", "WebFetch(*)"],
-    "prompt": [
+    "deny": [
       "Bash(git push --force *)",
       "Bash(git reset --hard*)",
       "Bash(ssh *)", "Bash(scp *)", "Bash(rsync *)", "Bash(sftp *)"
@@ -67,9 +67,11 @@ Controls what Claude Code is allowed to do. The key sections:
 
 - **allow** — operations that proceed without asking. File operations and
   bash are safe inside the container.
-- **prompt** — operations that require human confirmation. These are
-  "escape vectors" — commands that reach outside the container (SSH, SCP)
-  or are destructive (force push, hard reset).
+- **deny** — operations that are blocked outright. These are "escape
+  vectors" — commands that reach outside the container (SSH, SCP) or are
+  destructive (force push, hard reset). We use `deny` rather than `prompt`
+  because the prompt dialog has an "always allow" option that is too easy
+  to accept accidentally, which would permanently bypass the protection.
 
 **Hooks** enforce the devcontainer requirement:
 
@@ -135,8 +137,8 @@ issues, web content, or repository files):
   that VS Code copies from the host gitconfig
 - **Scoped GitHub PAT** — authentication uses a fine-grained token limited
   to specific repositories, stored in a per-repo container volume
-- **Network escape vectors prompted** — SSH, SCP, RSYNC require human
-  confirmation even inside the container
+- **Network escape vectors denied** — SSH, SCP, RSYNC are blocked outright
+  even inside the container
 
 See {doc}`devcontainer-features` for the full credential isolation setup
 and volume persistence strategy.

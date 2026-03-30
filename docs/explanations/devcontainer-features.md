@@ -74,9 +74,9 @@ repository files that attempt to misuse Claude's tool access):
 **Permission rules in `.claude/settings.json`:**
 
 - **Allow:** file operations, bash commands, web search/fetch
-- **Prompt (requires confirmation):** force push, hard reset, SSH/SCP/RSYNC,
-  and other network escape vectors
-- Destructive or externally-visible operations require human approval
+- **Deny:** force push, hard reset, SSH/SCP/RSYNC, and other network escape
+  vectors are blocked outright (using `deny` rather than `prompt` to prevent
+  accidental "always allow" approvals)
 
 For a deeper discussion of this pattern, including cross-language
 conventions and the design philosophy, see

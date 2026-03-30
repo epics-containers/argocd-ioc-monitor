@@ -9,7 +9,7 @@
       "WebFetch(*)",
       "mcp__claude-in-chrome__*"
     ],
-    "prompt": [
+    "deny": [
       "Bash(git push --force *)",
       "Bash(git reset --hard*)",
       "Bash(ssh *)",
