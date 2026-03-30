@@ -25,6 +25,12 @@ repos:
         types_or: [ts, tsx]
         require_serial: true
 
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.1.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.28.0
     hooks:
