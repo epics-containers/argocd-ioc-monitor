@@ -108,6 +108,33 @@ commit time. The standard hooks across all languages:
 Language-specific hooks are added per project (e.g. ESLint for TypeScript,
 Ruff for Python, golangci-lint for Go).
 
+For projects with Helm charts, the
+[helm-values-schema-json](https://github.com/losisin/helm-values-schema-json)
+hook regenerates `values.schema.json` from annotated `values.yaml` on
+every commit.
+
+## Helm chart conventions
+
+Projects that deploy to Kubernetes include a Helm chart with a generated
+JSON Schema for `values.yaml`. The schema provides IDE autocompletion and
+catches misconfiguration early.
+
+The schema is generated from `@schema` annotations in `values.yaml`:
+
+```yaml
+# @schema description: Kubernetes Service type
+# @schema enum: [ClusterIP, LoadBalancer, NodePort]
+type: LoadBalancer
+```
+
+A `.schema.config.yaml` in the chart directory configures the generator.
+The generated `values.schema.json` is committed to the repo and
+regenerated automatically by the pre-commit hook.
+
+Chart versioning is handled by CI — the version is derived from the git
+tag (e.g. tag `v1.2.3` → chart version `1.2.3`). Do not manually bump
+`version` in `Chart.yaml`.
+
 ## CI: GitHub Actions
 
 All projects use a consistent GitHub Actions CI structure with reusable
