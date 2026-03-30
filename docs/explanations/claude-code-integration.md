@@ -149,8 +149,8 @@ issues, web content, or repository files):
 - **Network escape vectors denied** — SSH, SCP, RSYNC are blocked outright
   even inside the container
 
-See {doc}`devcontainer-features` for the full credential isolation setup
-and volume persistence strategy.
+See {doc}`project-conventions` for the full credential isolation setup,
+devcontainer details, and volume persistence strategy.
 
 ## Cross-language conventions
 
@@ -158,14 +158,12 @@ The Claude Code integration pattern sits on top of a set of
 language-agnostic project conventions — `just` as the task runner,
 Conventional Commits, Sphinx + Diataxis docs, pre-commit hooks, and a
 consistent GitHub Actions CI structure. These are documented separately
-in {doc}`cross-language-conventions`.
+in {doc}`project-conventions`.
 
 ## Further reading
 
-- {doc}`cross-language-conventions` — shared tooling and conventions
-  across TypeScript, Python, and Go projects
-- {doc}`devcontainer-features` — full devcontainer setup, volumes, and
-  security assumptions
+- {doc}`project-conventions` — shared tooling, devcontainer setup, and
+  conventions across TypeScript, Python, and Go projects
 - [Building a Robot Simulator with Claude](https://diamondlightsource.github.io/robot-arm-sim/main/explanations/building-with-claude.html)
   — detailed walkthrough of Claude Code on a Python project, including
   prompting principles and lessons learned

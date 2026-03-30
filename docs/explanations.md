@@ -6,8 +6,7 @@
 explanations/architecture
 explanations/auth-flow
 explanations/claude-code-integration
-explanations/cross-language-conventions
-explanations/devcontainer-features
+explanations/project-conventions
 explanations/oidc-auth-plan
 explanations/data-fetching
 explanations/ci-cd-pipeline
