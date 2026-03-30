@@ -59,7 +59,8 @@ Controls what Claude Code is allowed to do. The key sections:
     "deny": [
       "Bash(git push --force *)",
       "Bash(git reset --hard*)",
-      "Bash(ssh *)", "Bash(scp *)", "Bash(rsync *)", "Bash(sftp *)"
+      "Bash(ssh *)", "Bash(ssh-agent *)", "Bash(*ssh-agent*)",
+      "Bash(scp *)", "Bash(rsync *)", "Bash(sftp *)"
     ]
   }
 }
@@ -69,9 +70,11 @@ Controls what Claude Code is allowed to do. The key sections:
   bash are safe inside the container.
 - **deny** — operations that are blocked outright. These are "escape
   vectors" — commands that reach outside the container (SSH, SCP) or are
-  destructive (force push, hard reset). We use `deny` rather than `prompt`
-  because the prompt dialog has an "always allow" option that is too easy
-  to accept accidentally, which would permanently bypass the protection.
+  destructive (force push, hard reset). The `ssh-agent` patterns prevent
+  Claude from re-enabling agent forwarding after the devcontainer has
+  blanked `SSH_AUTH_SOCK`. We use `deny` rather than `prompt` because the
+  prompt dialog has an "always allow" option that is too easy to accept
+  accidentally, which would permanently bypass the protection.
 
 **Hooks** enforce the devcontainer requirement:
 
