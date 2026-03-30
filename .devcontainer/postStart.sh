@@ -7,3 +7,9 @@ set -euo pipefail
 # can authenticate to remotes.
 git config --global credential.helper ''
 git config --global --unset-all url.ssh://git@github.com/.insteadOf 2>/dev/null || true
+
+# If gh CLI has cached credentials (survive container rebuild), re-register
+# its git credential helper so HTTPS remotes authenticate automatically.
+if gh auth status &>/dev/null; then
+    gh auth setup-git
+fi
