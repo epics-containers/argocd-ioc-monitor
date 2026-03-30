@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Devcontainer Features &#8212; argocd-monitor 0.3.2-2-ge9b37fb documentation</title>
+    <title>Devcontainer Features &#8212; argocd-monitor 0.3.2-9-g5a5c2d0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=36dcb7d2"></script>
+    <script src="../_static/documentation_options.js?v=d73588d2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -443,17 +443,28 @@ React application with Claude Code integration.</p>
 <h2>Base Image<a class="headerlink" href="#base-image" title="Link to this heading">#</a></h2>
 <p>The Dockerfile uses <code class="docutils literal notranslate"><span class="pre">ghcr.io/diamondlightsource/ubuntu-devcontainer:noble</span></code> as
 the base image. This provides a minimal Ubuntu Noble environment with common
-development tools pre-installed. The <code class="docutils literal notranslate"><span class="pre">postCreate.sh</span></code> script adds
-project-specific tooling on first launch:</p>
+development tools pre-installed. System-level tooling is baked into the Docker
+image for faster container starts:</p>
 <ul class="simple">
 <li><p><strong>Node.js 22</strong> for the React/TypeScript frontend</p></li>
-<li><p><strong>Claude Code CLI</strong> for AI-assisted development</p></li>
 <li><p><strong>just</strong> task runner for unified dev commands</p></li>
 <li><p><strong>GitHub CLI</strong> (<code class="docutils literal notranslate"><span class="pre">gh</span></code>) for push/PR workflows</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">postCreate.sh</span></code> script runs once on first container creation to install
+tools and dependencies that change more frequently:</p>
+<ul class="simple">
+<li><p><strong>Claude Code CLI</strong> for AI-assisted development</p></li>
 <li><p><strong>npm dependencies</strong> via <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">install</span></code></p></li>
 <li><p><strong>Python dependencies</strong> via <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">sync</span> <span class="pre">--all-extras</span></code></p></li>
 <li><p><strong>Pre-commit hooks</strong> installed and ready</p></li>
 </ul>
+<p>A separate <code class="docutils literal notranslate"><span class="pre">postStart.sh</span></code> script runs on every container start (including
+restarts and reopens). This is necessary because VS Code’s Dev Containers
+extension copies the host gitconfig into the container <em>after</em>
+<code class="docutils literal notranslate"><span class="pre">postCreateCommand</span></code> runs, which can re-inject credential helpers that were
+already blanked. The <code class="docutils literal notranslate"><span class="pre">postStart.sh</span></code> script resets the credential helper each
+time to maintain isolation (see <a class="reference internal" href="#credential-isolation">Credential isolation</a>
+below).</p>
 </section>
 <section id="claude-code-integration">
 <h2>Claude Code Integration<a class="headerlink" href="#claude-code-integration" title="Link to this heading">#</a></h2>
@@ -466,14 +477,18 @@ environment variable. This ensures the permission model is always active.</p>
 <p>The devcontainer applies several layers of protection against prompt injection
 attacks (malicious instructions hidden in GitHub issues, web content, or
 repository files that attempt to misuse Claude’s tool access):</p>
-<p><strong>Credential isolation:</strong></p>
+<p id="credential-isolation"><strong>Credential isolation:</strong></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SSH_AUTH_SOCK=&quot;&quot;</span></code> disables SSH agent forwarding, preventing access to host
 SSH keys</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">postCreate.sh</span></code> blanks the git credential helper
-(<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">config</span> <span class="pre">--global</span> <span class="pre">credential.helper</span> <span class="pre">''</span></code>), which overrides any helper
-injected by VS Code’s Dev Containers extension. Remote pushes require an
-explicit fine-grained PAT via <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">auth</span> <span class="pre">login</span></code> + <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">auth</span> <span class="pre">setup-git</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">postStart.sh</span></code> blanks the git credential helper and removes any
+<code class="docutils literal notranslate"><span class="pre">url.ssh://git&#64;github.com/.insteadOf</span></code> rewrite on every container start.
+This must run at start time rather than create time because VS Code’s Dev
+Containers extension copies the host gitconfig (including credential helpers
+and URL rewrites) into the container after <code class="docutils literal notranslate"><span class="pre">postCreateCommand</span></code> completes.
+Without this, the SSH rewrite would bypass HTTPS authentication entirely.
+Remote pushes require an explicit fine-grained PAT via <code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">gh-auth</span></code>
+(which wraps <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">auth</span> <span class="pre">login</span></code> + <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">auth</span> <span class="pre">setup-git</span></code>)</p></li>
 </ul>
 <p><strong>Scoped GitHub authentication:</strong></p>
 <ul class="simple">
@@ -506,6 +521,20 @@ dev loop</p></li>
 <li><p><a class="reference internal" href="ci-cd-pipeline.html"><span class="doc">CI/CD Pipeline</span></a> — GitHub Actions workflows, container
 publishing, and Helm chart versioning</p></li>
 </ul>
+<section id="just-check-vs-pre-commit-hooks">
+<h3><code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">check</span></code> vs pre-commit hooks<a class="headerlink" href="#just-check-vs-pre-commit-hooks" title="Link to this heading">#</a></h3>
+<p>Both <code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">check</span></code> and the pre-commit hooks run ESLint and <code class="docutils literal notranslate"><span class="pre">tsc</span> <span class="pre">--noEmit</span></code>, but
+they serve different purposes and the overlap is intentional:</p>
+<ul class="simple">
+<li><p><strong>Pre-commit hooks</strong> gate each commit. They run only on staged files, apply
+ESLint with <code class="docutils literal notranslate"><span class="pre">--fix</span></code> to auto-correct issues, and include housekeeping checks
+(large files, merge conflicts, end-of-file fixing, gitleaks).</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">check</span></code></strong> is a full-project validation. It runs lint, tests, and the
+docs build in parallel — read-only, no <code class="docutils literal notranslate"><span class="pre">--fix</span></code> — intended for manual use
+before committing or as a CI gate.</p></li>
+</ul>
+<p>Removing either would leave a gap: pre-commit catches issues at commit time on
+changed files, while <code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">check</span></code> validates the entire project.</p>
 <p>ESLint uses <code class="docutils literal notranslate"><span class="pre">tseslint.configs.recommendedTypeChecked</span></code> for type-aware rules
 (floating promises, unsafe <code class="docutils literal notranslate"><span class="pre">any</span></code>, misused promises). VS Code is configured
 (<code class="docutils literal notranslate"><span class="pre">.vscode/settings.json</span></code>) to run ESLint on save.</p>
@@ -513,6 +542,7 @@ publishing, and Helm chart versioning</p></li>
 <a class="reference external" href="https://pydata-sphinx-theme.readthedocs.io/">PyData theme</a> and
 <a class="reference external" href="https://myst-parser.readthedocs.io/">MyST</a> for Markdown support, with
 extensions for Mermaid diagrams, copy buttons, and grid layouts.</p>
+</section>
 </section>
 <section id="persistent-caches">
 <h2>Persistent Caches<a class="headerlink" href="#persistent-caches" title="Link to this heading">#</a></h2>
@@ -543,7 +573,7 @@ activate the venv automatically so <code class="docutils literal notranslate"><s
 <section id="github-cli-credentials-in-a-volume">
 <h3>GitHub CLI credentials in a volume<a class="headerlink" href="#github-cli-credentials-in-a-volume" title="Link to this heading">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">gh-auth</span></code> volume stores a fine-grained PAT (set up via
-<code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">auth</span> <span class="pre">login</span></code> + <code class="docutils literal notranslate"><span class="pre">gh</span> <span class="pre">auth</span> <span class="pre">setup-git</span></code>). This is safe under rootless Podman,
+<code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">gh-auth</span></code>). This is safe under rootless Podman,
 which is the intended runtime for this devcontainer:</p>
 <ul class="simple">
 <li><p><strong>No daemon socket</strong> — there is no privileged Docker socket to compromise.
@@ -626,7 +656,10 @@ configuration and memory persist across container rebuilds.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#protection-from-prompt-injection">Protection from Prompt Injection</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linting-testing-and-ci-cd">Linting, Testing, and CI/CD</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linting-testing-and-ci-cd">Linting, Testing, and CI/CD</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#just-check-vs-pre-commit-hooks"><code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">check</span></code> vs pre-commit hooks</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#persistent-caches">Persistent Caches</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#github-cli-credentials-in-a-volume">GitHub CLI credentials in a volume</a></li>
 </ul>

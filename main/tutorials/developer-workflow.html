@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Developer Workflow &#8212; argocd-monitor 0.3.2-2-ge9b37fb documentation</title>
+    <title>Developer Workflow &#8212; argocd-monitor 0.3.2-9-g5a5c2d0 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=36dcb7d2"></script>
+    <script src="../_static/documentation_options.js?v=d73588d2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -467,6 +467,16 @@ so always run this before committing documentation changes.</p>
 <p><code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">docs-watch</span></code> starts a local server with auto-reload — useful when
 writing or editing docs.</p>
 </section>
+<section id="setup">
+<h3>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just<span class="w"> </span>gh-auth<span class="w">       </span><span class="c1"># Authenticate gh CLI with a GitHub PAT</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">gh-auth</span></code> prompts for a fine-grained PAT (input is hidden), authenticates
+the GitHub CLI, and prints the resulting auth status. The token is stored in a
+per-repo container volume so it persists across rebuilds. See
+<a class="reference internal" href="../explanations/devcontainer-features.html"><span class="doc">Devcontainer Features</span></a> for the security model.</p>
+</section>
 <section id="development">
 <h3>Development<a class="headerlink" href="#development" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>just<span class="w"> </span>dev<span class="w">           </span><span class="c1"># Start Vite dev server on http://localhost:5173</span>
@@ -544,6 +554,7 @@ on every save.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#available-commands">Available commands</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#code-quality">Code quality</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#development">Development</a></li>
 </ul>
 </li>
