@@ -6,7 +6,5 @@
   ],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
-  },
-  "remote.containers.copyGitConfig": false,
-  "remote.containers.gitCredentialHelperConfigLocation": "none",
+  }
 }
