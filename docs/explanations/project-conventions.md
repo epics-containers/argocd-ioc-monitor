@@ -1,11 +1,16 @@
 # Project Conventions
 
-These conventions are shared across all projects that follow the
-devcontainer + Claude Code pattern described in
-{doc}`claude-code-integration`, regardless of whether the project uses
-TypeScript, Python, Go, or another stack. The goal is a consistent
-developer experience: anyone who has worked on one project can pick up
-another without re-learning the tooling.
+This project is a showcase for a language-agnostic development template
+that combines devcontainer isolation with Claude Code integration. The
+conventions documented here are intended to be shared across projects
+regardless of language stack — TypeScript, Python, Go, or others — via a
+[copier](https://copier.readthedocs.io/) template (extending
+[python-copier-template](https://github.com/DiamondLightSource/python-copier-template)).
+The goal is a consistent developer experience: anyone who has worked on
+one project can pick up another without re-learning the tooling.
+
+See {doc}`claude-code-integration` for the AI-assisted development
+pattern that sits on top of these conventions.
 
 ```{contents}
 :local:
