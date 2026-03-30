@@ -597,8 +597,7 @@ round-trip time.</p>
 <h2>The release process<a class="headerlink" href="#the-release-process" title="Link to this heading">#</a></h2>
 <p>Releases follow this workflow:</p>
 <ol class="arabic simple">
-<li><p>A maintainer creates a <strong>GitHub Release</strong> through the GitHub UI,
-which creates a git tag (e.g. <code class="docutils literal notranslate"><span class="pre">v1.2.3</span></code>).</p></li>
+<li><p>A maintainer pushes a git tag (e.g. <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">tag</span> <span class="pre">v1.2.3</span> <span class="pre">&amp;&amp;</span> <span class="pre">git</span> <span class="pre">push</span> <span class="pre">origin</span> <span class="pre">v1.2.3</span></code>).</p></li>
 <li><p>The tag push triggers the CI pipeline.</p></li>
 <li><p>Because the ref is a tag:</p>
 <ul class="simple">
@@ -609,11 +608,10 @@ OCI chart registry.</p></li>
 <li><p>Documentation is built and published under the version directory.</p></li>
 </ul>
 </li>
-<li><p>GitHub auto-generates release notes from merged PRs.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">_release.yml</span></code> workflow creates a <strong>GitHub Release</strong> with
+auto-generated release notes from merged PRs. Tags containing <code class="docutils literal notranslate"><span class="pre">a</span></code>,
+<code class="docutils literal notranslate"><span class="pre">b</span></code>, or <code class="docutils literal notranslate"><span class="pre">rc</span></code> are marked as pre-releases.</p></li>
 </ol>
-<p>Tags should <strong>not</strong> be created manually from the CLI. The GitHub
-Releases UI is the single entry point for cutting a release, ensuring
-release notes are generated and the tag triggers CI correctly.</p>
 </section>
 </section>
 
