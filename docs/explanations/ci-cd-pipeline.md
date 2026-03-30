@@ -142,24 +142,6 @@ on every `git commit`:
 These hooks catch common issues before code reaches CI, reducing
 round-trip time.
 
-## Local quality gate: `just check`
-
-The `just check` command runs lint, tests, and docs build **in
-parallel** using background shell processes:
-
-```bash
-# from justfile
-just lint & pid_lint=$!
-just test & pid_test=$!
-just docs & pid_docs=$!
-wait $pid_lint  || fail=1
-wait $pid_test  || fail=1
-wait $pid_docs  || fail=1
-```
-
-This mirrors the CI pipeline locally and is the recommended command to
-run before committing. It exits non-zero if any of the three jobs fail.
-
 ## The release process
 
 Releases follow this workflow:
