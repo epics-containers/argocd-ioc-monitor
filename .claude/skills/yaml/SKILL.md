@@ -1,14 +1,14 @@
 ---
 name: yaml
-description: YAML & JSON Schema Conventions
+description: "YAML & JSON Schema Conventions for Python projects using Pydantic. TRIGGER when: Python code reads, writes, or validates YAML/JSON (e.g. imports yaml, pydantic models for config files). DO NOT TRIGGER when: editing YAML files directly (Helm charts, CI workflows, config files) or working in non-Python code."
 ---
 
 > **Generic skill** — This skill is project-agnostic. Do not add project-specific
 > references, paths, or terminology here.
 
-# YAML & JSON Schema Conventions
+# YAML & JSON Schema Conventions (Python / Pydantic)
 
-Consult this when reading, writing, or modifying any YAML or JSON files in a project.
+Consult this when writing Python code that reads, writes, or validates YAML or JSON files.
 
 ## Prefer Pydantic models for YAML I/O
 
@@ -29,8 +29,6 @@ When saving YAML, prepend a schema tag so VS Code (with the YAML extension) prov
 ```
 
 Use a relative path from the YAML file to the JSON Schema file. Save helpers should add this automatically.
-
-Another approach is to publish schemas as GitHub Release artifacts and reference via absolute URL. (TODO: add details for ibek projects)
 
 ## JSON Schema generation from Pydantic
 

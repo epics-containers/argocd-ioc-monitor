@@ -50,6 +50,7 @@ Token management lives in `src/lib/auth-token.ts`. Tokens are stored in localSto
 
 ## Git Workflow
 
+- **Commit messages** use [Conventional Commits](https://www.conventionalcommits.org/) (e.g. `fix:`, `feat:`, `chore:`, `docs:`, `refactor:`, `test:`).
 - **NEVER push directly to main.** All changes go through PRs.
 - **Releases:** Create via GitHub Releases UI with auto-generated release notes. Do NOT tag manually from the CLI. The tag triggers CI to publish the container image and Helm chart.
 
