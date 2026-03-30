@@ -5,6 +5,7 @@
 
 explanations/architecture
 explanations/auth-flow
+explanations/claude-code-integration
 explanations/devcontainer-features
 explanations/oidc-auth-plan
 explanations/data-fetching

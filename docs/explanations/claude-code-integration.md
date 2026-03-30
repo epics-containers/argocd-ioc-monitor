@@ -1,0 +1,179 @@
+# Claude Code Integration
+
+This project is a showcase for integrating
+[Claude Code](https://claude.com/claude-code) into a devcontainer-based
+development workflow. The pattern is language-agnostic — it works the same
+way for TypeScript (this project), Python
+([robot-arm-sim](https://github.com/gilesknap/robot-arm-sim)), and Go
+([dra-usbip-driver](https://github.com/DiamondLightSource/dra-usbip-driver)).
+
+```{contents}
+:local:
+:depth: 2
+```
+
+## Design principle: autonomy through isolation
+
+Claude Code is most productive when given broad permissions — freedom to
+read, write, run tests, and push code without constant approval prompts.
+But broad permissions are only safe inside a controlled environment. The
+devcontainer provides that environment: a disposable, reproducible sandbox
+where Claude can operate freely without risk to the host machine or
+unrelated repositories.
+
+This is the central trade-off:
+
+> **More autonomy inside the container, strict enforcement that it runs
+> nowhere else.**
+
+## Configuration layers
+
+Claude Code configuration lives in three layers, each with a different
+scope and audience:
+
+### `CLAUDE.md` — project instructions
+
+Checked into the repo root. Loaded into every conversation, so it must be
+concise (aim for under 50 lines). Contains:
+
+- **Build commands** — how to lint, test, build, and run docs
+- **Hard rules** — things that cause real damage if forgotten (e.g. "never
+  push to main", "always run `just check` before committing")
+- **Foot-guns** — silent failures, sync requirements, non-obvious gotchas
+- **Conventions** — commit style, coding patterns (one line each)
+
+Everything else belongs in skills (loaded on demand) or in documentation
+(explored when needed). See the
+[trim-claude-md pattern](#keeping-claude-md-lean) below.
+
+### `.claude/settings.json` — permissions and hooks
+
+Controls what Claude Code is allowed to do. The key sections:
+
+**Permissions** grant broad access inside the devcontainer:
+
+```json
+{
+  "permissions": {
+    "allow": ["Read", "Edit", "Write", "Bash(*)", "WebSearch", "WebFetch(*)"],
+    "prompt": [
+      "Bash(git push --force *)",
+      "Bash(git reset --hard*)",
+      "Bash(ssh *)", "Bash(scp *)", "Bash(rsync *)", "Bash(sftp *)"
+    ]
+  }
+}
+```
+
+- **allow** — operations that proceed without asking. File operations and
+  bash are safe inside the container.
+- **prompt** — operations that require human confirmation. These are
+  "escape vectors" — commands that reach outside the container (SSH, SCP)
+  or are destructive (force push, hard reset).
+
+**Hooks** enforce the devcontainer requirement:
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [{
+      "hooks": [{
+        "type": "command",
+        "command": "if [ -z \"$REMOTE_CONTAINERS\" ]; then echo 'BLOCKED: ...'; exit 2; fi"
+      }]
+    }]
+  }
+}
+```
+
+The `$REMOTE_CONTAINERS` variable is set by VS Code when running inside a
+devcontainer. If it is absent, every prompt is blocked. This prevents
+accidental use of the permissive settings on the host.
+
+### `.claude/skills/` — on-demand knowledge
+
+Skills are markdown files that Claude loads only when relevant (based on
+the `description` field). They keep detailed knowledge out of `CLAUDE.md`
+while making it available when needed.
+
+Good candidates for skills:
+
+| Skill | When it triggers |
+|-------|-----------------|
+| `documentation` | Editing files under `docs/` |
+| `ci-debug` | Investigating CI failures |
+| `yaml` | Python code that reads/writes YAML |
+| `memo` | Saving work state to persistent memory |
+
+Skills should be **project-agnostic** where possible so they can be shared
+across repositories via a copier template. Project-specific knowledge
+belongs in `CLAUDE.md` or in the documentation.
+
+(keeping-claude-md-lean)=
+## Keeping CLAUDE.md lean
+
+`CLAUDE.md` is loaded into every conversation turn. A long file wastes
+tokens, slows responses, and dilutes critical instructions. The rule of
+thumb:
+
+- **Keep inline:** rules that cause damage if forgotten on any task
+- **Move to skills:** stable knowledge only needed sometimes (architecture,
+  integration patterns, detailed conventions)
+- **Drop entirely:** anything discoverable by exploring the codebase
+  (directory trees, file listings, config schemas)
+
+## Credential isolation
+
+The devcontainer isolates credentials from the host to limit the blast
+radius of prompt injection attacks (malicious instructions hidden in
+issues, web content, or repository files):
+
+- **SSH agent forwarding disabled** — `SSH_AUTH_SOCK=""` prevents access
+  to host SSH keys
+- **Git credential helper blanked** on every container start — the
+  `postStart.sh` script removes credential helpers and SSH URL rewrites
+  that VS Code copies from the host gitconfig
+- **Scoped GitHub PAT** — authentication uses a fine-grained token limited
+  to specific repositories, stored in a per-repo container volume
+- **Network escape vectors prompted** — SSH, SCP, RSYNC require human
+  confirmation even inside the container
+
+See {doc}`devcontainer-features` for the full credential isolation setup
+and volume persistence strategy.
+
+## Cross-language conventions
+
+The following conventions are shared across all projects that use this
+pattern, regardless of language:
+
+| Convention | Purpose |
+|-----------|---------|
+| Devcontainer with isolation hook | Safe autonomous execution |
+| [Conventional Commits](https://www.conventionalcommits.org/) | Consistent commit messages |
+| [Sphinx](https://www.sphinx-doc.org/) + [MyST](https://myst-parser.readthedocs.io/) docs | Documentation builds |
+| [Diataxis](https://diataxis.fr) framework | Documentation structure |
+| Pre-commit hooks | Catch issues before commit |
+| Single check command (`just check` / `tox -p` / `make ci`) | Local CI equivalent |
+| GitHub Actions CI | Lint → test → container → docs → release |
+| [Renovate](https://docs.renovatebot.com/) | Automated dependency updates |
+| `CLAUDE.md` + skills + settings.json | Claude Code configuration |
+
+What varies per language stack:
+
+| Concern | TypeScript | Python | Go |
+|---------|-----------|--------|-----|
+| Task runner | just | tox (via uv) | make |
+| Linter | ESLint + tsc | Ruff + Pyright | golangci-lint |
+| Test runner | vitest | pytest | go test |
+| Package manager | npm | uv | go modules |
+| Formatter | ESLint | Ruff | gofmt |
+
+## Further reading
+
+- {doc}`devcontainer-features` — full devcontainer setup, volumes, and
+  security assumptions
+- [Building a Robot Simulator with Claude](https://diamondlightsource.github.io/robot-arm-sim/main/explanations/building-with-claude.html)
+  — detailed walkthrough of Claude Code on a Python project, including
+  prompting principles and lessons learned
+- [python-copier-template](https://github.com/DiamondLightSource/python-copier-template)
+  — the upstream template this pattern extends

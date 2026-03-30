@@ -78,10 +78,9 @@ repository files that attempt to misuse Claude's tool access):
   and other network escape vectors
 - Destructive or externally-visible operations require human approval
 
-For a deeper discussion of this security pattern, including autonomous
-execution in ephemeral containers, see the
-[Claude safety documentation](https://diamondlightsource.github.io/robot-arm-sim/main/explanations/claude-safety.html)
-in the robot-arm-sim project.
+For a deeper discussion of this pattern, including cross-language
+conventions and the design philosophy, see
+{doc}`claude-code-integration`.
 
 ## Linting, Testing, and CI/CD
 
