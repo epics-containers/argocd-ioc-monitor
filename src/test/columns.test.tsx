@@ -32,6 +32,7 @@ function makeApp(overrides: {
 }
 
 function TestTable({ data }: { data: Application[] }) {
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
