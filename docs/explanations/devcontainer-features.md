@@ -54,13 +54,14 @@ repository files that attempt to misuse Claude's tool access):
 
 - `SSH_AUTH_SOCK=""` disables SSH agent forwarding, preventing access to host
   SSH keys
-- `postStart.sh` blanks the git credential helper
-  (`git config --global credential.helper ''`) on every container start. This
-  must run at start time rather than create time because VS Code's Dev
-  Containers extension copies the host gitconfig (and its credential helpers)
-  into the container after `postCreateCommand` completes. Remote pushes
-  require an explicit fine-grained PAT via `just gh-auth` (which wraps
-  `gh auth login` + `gh auth setup-git`)
+- `postStart.sh` blanks the git credential helper and removes any
+  `url.ssh://git@github.com/.insteadOf` rewrite on every container start.
+  This must run at start time rather than create time because VS Code's Dev
+  Containers extension copies the host gitconfig (including credential helpers
+  and URL rewrites) into the container after `postCreateCommand` completes.
+  Without this, the SSH rewrite would bypass HTTPS authentication entirely.
+  Remote pushes require an explicit fine-grained PAT via `just gh-auth`
+  (which wraps `gh auth login` + `gh auth setup-git`)
 
 **Scoped GitHub authentication:**
 

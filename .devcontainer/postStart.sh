@@ -1,7 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-# Wipe any credential helpers (including VS Code's auto-injected OAuth helper).
-# An empty-string value resets the helper list so only an explicit PAT via
-# `gh auth login` + `gh auth setup-git` can authenticate to remotes.
+# Wipe any credential helpers and SSH URL rewrites injected by VS Code's
+# Dev Containers extension when it copies the host gitconfig. An empty-string
+# value resets the helper list so only an explicit PAT via `just gh-auth`
+# can authenticate to remotes.
 git config --global credential.helper ''
+git config --global --unset-all url.ssh://git@github.com/.insteadOf 2>/dev/null || true

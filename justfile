@@ -55,4 +55,5 @@ gh-auth:
     read -sp "GitHub PAT: " t && echo
     echo "$t" | gh auth login --with-token
     unset t
+    gh auth setup-git
     gh auth status
