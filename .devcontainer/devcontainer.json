@@ -19,6 +19,10 @@
     "VIRTUAL_ENV": "/cache/venv-for${localWorkspaceFolder}",
     "PATH": "/cache/venv-for${localWorkspaceFolder}/bin:${containerEnv:PATH}"
   },
+  "runArgs": [
+    // Allow SELinux to permit host file copies (e.g. copyGitConfig via podman cp)
+    "--security-opt=label=disable"
+  ],
   "remoteUser": "root",
   "postCreateCommand": ".devcontainer/postCreate.sh",
   "customizations": {
@@ -28,6 +32,7 @@
         // container. They are kept here as documentation; set them in your
         // host VS Code settings for defence-in-depth. The real guard is
         // `git config --global credential.helper ''` in postCreate.sh.
+        // "dev.containers.copyGitConfig": true,
         "dev.containers.gitCredentialHelperConfigLocation": "none"
       },
       "extensions": [
