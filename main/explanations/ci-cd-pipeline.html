@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>CI/CD Pipeline &#8212; argocd-monitor 0.3.2-20-geb3ee65 documentation</title>
+    <title>CI/CD Pipeline &#8212; argocd-monitor 0.3.2-21-gdbbab6b documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=089b0f86"></script>
+    <script src="../_static/documentation_options.js?v=df411ff3"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -57,7 +57,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Reference" href="../reference.html" />
-    <link rel="prev" title="Data Fetching Patterns" href="data-fetching.html" />
+    <link rel="prev" title="OIDC Authentication via Keycloak" href="oidc-auth-plan.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="main" />
@@ -364,10 +364,10 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auth-flow.html">Authentication Flow</a></li>
-<li class="toctree-l1"><a class="reference internal" href="devcontainer-features.html">Devcontainer Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-and-auth.html">API and Authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="claude-code-integration.html">Claude Code Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project-conventions.html">Project Conventions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="oidc-auth-plan.html">OIDC Authentication via Keycloak</a></li>
-<li class="toctree-l1"><a class="reference internal" href="data-fetching.html">Data Fetching Patterns</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">CI/CD Pipeline</a></li>
 </ul>
 </div>
@@ -438,7 +438,7 @@ container images and Helm charts.</p>
 <h2>Pipeline overview<a class="headerlink" href="#pipeline-overview" title="Link to this heading">#</a></h2>
 <p>The CI pipeline is defined in <code class="docutils literal notranslate"><span class="pre">.github/workflows/ci.yml</span></code> and is
 composed of four reusable workflow files:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>lint  ──────┬──► container (build &amp; optionally push)
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>check  ─────┬──► container (build &amp; optionally push)
             │
             └──► helm      (package &amp; optionally push)
 
@@ -446,13 +446,13 @@ docs  ────────► build &amp; optionally publish to GitHub Pages
 </pre></div>
 </div>
 <p>Every push to <code class="docutils literal notranslate"><span class="pre">main</span></code>, every pull request, and every tag triggers the
-full pipeline. The <code class="docutils literal notranslate"><span class="pre">lint</span></code> job must succeed before <code class="docutils literal notranslate"><span class="pre">container</span></code> and <code class="docutils literal notranslate"><span class="pre">helm</span></code>
-run (they depend on it via <code class="docutils literal notranslate"><span class="pre">needs:</span> <span class="pre">lint</span></code>). The <code class="docutils literal notranslate"><span class="pre">docs</span></code> job runs
+full pipeline. The <code class="docutils literal notranslate"><span class="pre">check</span></code> job must succeed before <code class="docutils literal notranslate"><span class="pre">container</span></code> and <code class="docutils literal notranslate"><span class="pre">helm</span></code>
+run (they depend on it via <code class="docutils literal notranslate"><span class="pre">needs:</span> <span class="pre">check</span></code>). The <code class="docutils literal notranslate"><span class="pre">docs</span></code> job runs
 independently with no dependencies.</p>
 </section>
-<section id="lint-test-and-type-check">
-<h2>Lint, test, and type check<a class="headerlink" href="#lint-test-and-type-check" title="Link to this heading">#</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">_lint.yml</span></code> workflow installs Node 22, runs <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">ci</span></code>, then executes
+<section id="check-lint-type-check-and-test">
+<h2>Check: lint, type check, and test<a class="headerlink" href="#check-lint-type-check-and-test" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">_check.yml</span></code> workflow installs Node 22, runs <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">ci</span></code>, then executes
 three checks in sequence:</p>
 <ol class="arabic simple">
 <li><p><strong>ESLint</strong> (<code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">run</span> <span class="pre">lint</span></code>) – catches style and correctness issues.</p></li>
@@ -486,7 +486,7 @@ pushes and <code class="docutils literal notranslate"><span class="pre">dev</spa
 <p>The image is only pushed to the registry when <strong>both</strong> conditions are
 met:</p>
 <ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">lint</span></code> job passed (<code class="docutils literal notranslate"><span class="pre">inputs.publish</span></code> is true).</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">check</span></code> job passed (<code class="docutils literal notranslate"><span class="pre">inputs.publish</span></code> is true).</p></li>
 <li><p>The git ref is a <strong>tag</strong> (<code class="docutils literal notranslate"><span class="pre">github.ref_type</span> <span class="pre">==</span> <span class="pre">'tag'</span></code>).</p></li>
 </ul>
 <p>This means pull requests and pushes to <code class="docutils literal notranslate"><span class="pre">main</span></code> build and test the image
@@ -512,7 +512,7 @@ whatever version is in <code class="docutils literal notranslate"><span class="p
 </section>
 <section id="id1">
 <h3>Conditional publishing<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
-<p>Like the container image, the chart is only pushed when lint passes and
+<p>Like the container image, the chart is only pushed when check passes and
 the ref is a tag:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># from _helm.yml</span>
 <span class="nt">if</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inputs.publish &amp;&amp; github.ref_type == &#39;tag&#39;</span>
@@ -579,7 +579,11 @@ on every <code class="docutils literal notranslate"><span class="pre">git</span>
 <td><p>local</p></td>
 <td><p>TypeScript type checking</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gitleaks</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">conventional-pre-commit</span></code></p></td>
+<td><p>compilerla</p></td>
+<td><p>Validate conventional commit message format</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gitleaks</span></code></p></td>
 <td><p>gitleaks</p></td>
 <td><p>Scan for accidentally committed secrets</p></td>
 </tr>
@@ -589,28 +593,11 @@ on every <code class="docutils literal notranslate"><span class="pre">git</span>
 <p>These hooks catch common issues before code reaches CI, reducing
 round-trip time.</p>
 </section>
-<section id="local-quality-gate-just-check">
-<h2>Local quality gate: <code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">check</span></code><a class="headerlink" href="#local-quality-gate-just-check" title="Link to this heading">#</a></h2>
-<p>The <code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">check</span></code> command runs lint, tests, and docs build <strong>in
-parallel</strong> using background shell processes:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># from justfile</span>
-just<span class="w"> </span>lint<span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="nv">pid_lint</span><span class="o">=</span><span class="nv">$!</span>
-just<span class="w"> </span><span class="nb">test</span><span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="nv">pid_test</span><span class="o">=</span><span class="nv">$!</span>
-just<span class="w"> </span>docs<span class="w"> </span><span class="p">&amp;</span><span class="w"> </span><span class="nv">pid_docs</span><span class="o">=</span><span class="nv">$!</span>
-<span class="nb">wait</span><span class="w"> </span><span class="nv">$pid_lint</span><span class="w">  </span><span class="o">||</span><span class="w"> </span><span class="nv">fail</span><span class="o">=</span><span class="m">1</span>
-<span class="nb">wait</span><span class="w"> </span><span class="nv">$pid_test</span><span class="w">  </span><span class="o">||</span><span class="w"> </span><span class="nv">fail</span><span class="o">=</span><span class="m">1</span>
-<span class="nb">wait</span><span class="w"> </span><span class="nv">$pid_docs</span><span class="w">  </span><span class="o">||</span><span class="w"> </span><span class="nv">fail</span><span class="o">=</span><span class="m">1</span>
-</pre></div>
-</div>
-<p>This mirrors the CI pipeline locally and is the recommended command to
-run before committing. It exits non-zero if any of the three jobs fail.</p>
-</section>
 <section id="the-release-process">
 <h2>The release process<a class="headerlink" href="#the-release-process" title="Link to this heading">#</a></h2>
 <p>Releases follow this workflow:</p>
 <ol class="arabic simple">
-<li><p>A maintainer creates a <strong>GitHub Release</strong> through the GitHub UI,
-which creates a git tag (e.g. <code class="docutils literal notranslate"><span class="pre">v1.2.3</span></code>).</p></li>
+<li><p>A maintainer pushes a git tag (e.g. <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">tag</span> <span class="pre">v1.2.3</span> <span class="pre">&amp;&amp;</span> <span class="pre">git</span> <span class="pre">push</span> <span class="pre">origin</span> <span class="pre">v1.2.3</span></code>).</p></li>
 <li><p>The tag push triggers the CI pipeline.</p></li>
 <li><p>Because the ref is a tag:</p>
 <ul class="simple">
@@ -621,11 +608,10 @@ OCI chart registry.</p></li>
 <li><p>Documentation is built and published under the version directory.</p></li>
 </ul>
 </li>
-<li><p>GitHub auto-generates release notes from merged PRs.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">_release.yml</span></code> workflow creates a <strong>GitHub Release</strong> with
+auto-generated release notes from merged PRs. Tags containing <code class="docutils literal notranslate"><span class="pre">a</span></code>,
+<code class="docutils literal notranslate"><span class="pre">b</span></code>, or <code class="docutils literal notranslate"><span class="pre">rc</span></code> are marked as pre-releases.</p></li>
 </ol>
-<p>Tags should <strong>not</strong> be created manually from the CLI. The GitHub
-Releases UI is the single entry point for cutting a release, ensuring
-release notes are generated and the tag triggers CI correctly.</p>
 </section>
 </section>
 
@@ -640,12 +626,12 @@ release notes are generated and the tag triggers CI correctly.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="data-fetching.html"
+       href="oidc-auth-plan.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Data Fetching Patterns</p>
+        <p class="prev-next-title">OIDC Authentication via Keycloak</p>
       </div>
     </a>
     <a class="right-next"
@@ -677,7 +663,7 @@ release notes are generated and the tag triggers CI correctly.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pipeline-overview">Pipeline overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lint-test-and-type-check">Lint, test, and type check</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#check-lint-type-check-and-test">Check: lint, type check, and test</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#container-image-build-and-publish">Container image build and publish</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#build-and-test">Build and test</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conditional-publishing">Conditional publishing</a></li>
@@ -690,7 +676,6 @@ release notes are generated and the tag triggers CI correctly.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-publishing">Documentation publishing</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pre-commit-hooks">Pre-commit hooks</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#local-quality-gate-just-check">Local quality gate: <code class="docutils literal notranslate"><span class="pre">just</span> <span class="pre">check</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-release-process">The release process</a></li>
 </ul>
   </nav></div>
