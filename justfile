@@ -63,8 +63,8 @@ seal-secret namespace:
     echo ""
     echo "Decrypting client secret..."
     client_secret=$(echo "$encrypted" | gpg --decrypt --quiet 2>/dev/null)
-    cookie_secret=$(openssl rand -base64 32)
-    echo "Generating SealedSecret in namespace '{{namespace}}'..."
+    cookie_secret=$(openssl rand -hex 16)
+    echo "Creating SealedSecret in namespace '{{namespace}}'..."
     kubectl create secret generic argocd-monitor-oauth2 \
         --namespace="{{namespace}}" \
         --from-literal=client-secret="$client_secret" \
@@ -72,8 +72,8 @@ seal-secret namespace:
         --dry-run=client -o json \
     | kubeseal --format yaml \
         --namespace="{{namespace}}" \
-    > helm/argocd-monitor/templates/sealed-secret.yaml
-    echo "Sealed secret written to helm/argocd-monitor/templates/sealed-secret.yaml"
+    | kubectl apply -f -
+    echo "SealedSecret applied to namespace '{{namespace}}'"
 
 # Authenticate gh CLI with a GitHub PAT (token not stored in shell history)
 gh-auth:

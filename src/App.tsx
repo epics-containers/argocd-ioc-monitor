@@ -33,8 +33,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     void fetchAuthMode();
   }, []);
 
-  // In oauth2-proxy mode, the proxy handles auth — skip the token dialog
-  const needsManualToken = authMode !== "oauth2-proxy" && !hasToken;
+  // Don't show dialog while auth mode is loading, or in oauth2-proxy mode
+  const needsManualToken = authMode === "manual" && !hasToken;
 
   return (
     <>

@@ -59,6 +59,7 @@ spec:
             - --cookie-samesite=lax
             - --cookie-refresh=60s
             - --email-domain=*
+            - --insecure-oidc-allow-unverified-email=true
             - --skip-provider-button=true
             - --code-challenge-method=S256
             {{- range .Values.oauth2Proxy.extraArgs }}
