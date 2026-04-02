@@ -5,10 +5,13 @@ metadata:
   name: {{ include "argocd-monitor.fullname" . }}
   labels:
     {{- include "argocd-monitor.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
   annotations:
+    {{- if .Values.oauth2Proxy.enabled }}
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+    {{- end }}
+    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 spec:
   {{- if .Values.ingress.className }}
   ingressClassName: {{ .Values.ingress.className }}

@@ -74,6 +74,89 @@
             },
             "additionalProperties": false
         },
+        "oauth2Proxy": {
+            "type": "object",
+            "properties": {
+                "clientId": {
+                    "description": "OIDC client ID registered in Keycloak",
+                    "type": "string"
+                },
+                "enabled": {
+                    "description": "Enable oauth2-proxy sidecar for Keycloak OIDC authentication",
+                    "type": "boolean"
+                },
+                "existingSecret": {
+                    "description": "Name of existing K8s Secret with keys client-secret and cookie-secret",
+                    "type": "string"
+                },
+                "extraArgs": {
+                    "description": "Additional command-line arguments for oauth2-proxy",
+                    "type": "array"
+                },
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "pullPolicy": {
+                            "description": "oauth2-proxy image pull policy",
+                            "type": "string",
+                            "enum": [
+                                "Always",
+                                "IfNotPresent",
+                                "Never"
+                            ]
+                        },
+                        "repository": {
+                            "description": "oauth2-proxy container image repository",
+                            "type": "string"
+                        },
+                        "tag": {
+                            "description": "oauth2-proxy image tag",
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "issuerUrl": {
+                    "description": "OIDC issuer URL (e.g. https://identity.example.com/realms/myrealm)",
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "object",
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "properties": {
+                                "cpu": {
+                                    "description": "oauth2-proxy CPU limit",
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "description": "oauth2-proxy memory limit",
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "requests": {
+                            "type": "object",
+                            "properties": {
+                                "cpu": {
+                                    "description": "oauth2-proxy CPU request",
+                                    "type": "string"
+                                },
+                                "memory": {
+                                    "description": "oauth2-proxy memory request",
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
         "replicaCount": {
             "description": "Number of pod replicas",
             "type": "integer",

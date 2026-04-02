@@ -1,6 +1,7 @@
 import {
   applyStoredTokens,
   getStoredRefreshToken,
+  getAuthModeSnapshot,
   onAuthFailure,
   saveTokens,
 } from "@/lib/auth-token";
@@ -74,9 +75,12 @@ export async function argocdFetch<T>(
   let response = await fetch(`${baseUrl}${path}`, fetchOpts);
 
   if (response.status === 401) {
-    const refreshed = await tryRefreshToken();
-    if (refreshed) {
-      response = await fetch(`${baseUrl}${path}`, fetchOpts);
+    // In oauth2-proxy mode, the proxy handles token refresh — don't attempt manual refresh
+    if (getAuthModeSnapshot() !== "oauth2-proxy") {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        response = await fetch(`${baseUrl}${path}`, fetchOpts);
+      }
     }
     if (response.status === 401) {
       onAuthFailure();
@@ -104,9 +108,11 @@ export async function argocdFetchStream(
   let response = await fetch(`${baseUrl}${path}`, fetchOpts);
 
   if (response.status === 401) {
-    const refreshed = await tryRefreshToken();
-    if (refreshed) {
-      response = await fetch(`${baseUrl}${path}`, fetchOpts);
+    if (getAuthModeSnapshot() !== "oauth2-proxy") {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        response = await fetch(`${baseUrl}${path}`, fetchOpts);
+      }
     }
     if (response.status === 401) {
       onAuthFailure();
