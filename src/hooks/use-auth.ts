@@ -1,12 +1,17 @@
+import { useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getUserInfo } from "@/api/session";
+import { subscribeAuthMode, getAuthModeSnapshot } from "@/lib/auth-token";
 
 export function useAuth() {
+  const authMode = useSyncExternalStore(subscribeAuthMode, getAuthModeSnapshot);
+
   const query = useQuery({
-    queryKey: ["auth", "userinfo"],
+    queryKey: ["auth", "userinfo", authMode],
     queryFn: getUserInfo,
     retry: false,
     refetchOnWindowFocus: false,
+    enabled: authMode !== null,
   });
 
   return {
