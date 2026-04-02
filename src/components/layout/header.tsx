@@ -1,18 +1,24 @@
+import { useSyncExternalStore } from "react";
 import { useNavigate } from "react-router";
 import { Moon, Sun, Activity, LogOut } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
-import { clearStoredToken } from "@/lib/auth-token";
+import { clearStoredToken, subscribeAuthMode, getAuthModeSnapshot } from "@/lib/auth-token";
 
 export function Header() {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const authMode = useSyncExternalStore(subscribeAuthMode, getAuthModeSnapshot);
 
   function handleLogout() {
+    if (authMode === "oauth2-proxy") {
+      window.location.href = "/oauth2/sign_out";
+      return;
+    }
     clearStoredToken();
     void queryClient.invalidateQueries({ queryKey: ["auth"] });
   }

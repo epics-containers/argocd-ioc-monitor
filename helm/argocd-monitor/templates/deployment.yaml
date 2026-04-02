@@ -39,6 +39,53 @@ spec:
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: default.conf
               readOnly: true
+        {{- if .Values.oauth2Proxy.enabled }}
+        - name: oauth2-proxy
+          image: "{{ .Values.oauth2Proxy.image.repository }}:{{ .Values.oauth2Proxy.image.tag }}"
+          imagePullPolicy: {{ .Values.oauth2Proxy.image.pullPolicy }}
+          ports:
+            - name: oauth2-proxy
+              containerPort: 4180
+              protocol: TCP
+          args:
+            - --provider=oidc
+            - --oidc-issuer-url={{ .Values.oauth2Proxy.issuerUrl }}
+            - --client-id={{ .Values.oauth2Proxy.clientId }}
+            - --upstream=http://localhost:8080
+            - --http-address=0.0.0.0:4180
+            - --pass-access-token=true
+            - --set-xauthrequest=true
+            - --cookie-secure=true
+            - --cookie-samesite=lax
+            - --cookie-refresh=60s
+            - --email-domain=*
+            - --skip-provider-button=true
+            - --code-challenge-method=S256
+            {{- range .Values.oauth2Proxy.extraArgs }}
+            - {{ . }}
+            {{- end }}
+          env:
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.oauth2Proxy.existingSecret }}
+                  key: client-secret
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.oauth2Proxy.existingSecret }}
+                  key: cookie-secret
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: oauth2-proxy
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: oauth2-proxy
+          resources:
+            {{- toYaml .Values.oauth2Proxy.resources | nindent 12 }}
+        {{- end }}
       volumes:
         - name: nginx-config
           configMap:

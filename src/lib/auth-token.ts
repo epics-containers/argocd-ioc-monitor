@@ -1,6 +1,34 @@
 const TOKEN_KEY = "argocd-token";
 const REFRESH_KEY = "argocd-refresh-token";
 
+// Auth mode detection — cached after first fetch
+let authModeCache: "oauth2-proxy" | "manual" | null = null;
+const authModeListeners = new Set<() => void>();
+
+export type AuthMode = "oauth2-proxy" | "manual";
+
+export function subscribeAuthMode(cb: () => void) {
+  authModeListeners.add(cb);
+  return () => { authModeListeners.delete(cb); };
+}
+
+export function getAuthModeSnapshot(): AuthMode | null {
+  return authModeCache;
+}
+
+export async function fetchAuthMode(): Promise<AuthMode> {
+  if (authModeCache) return authModeCache;
+  try {
+    const res = await fetch("/api/auth-mode");
+    const data = (await res.json()) as { mode: AuthMode };
+    authModeCache = data.mode;
+  } catch {
+    authModeCache = "manual";
+  }
+  authModeListeners.forEach((l) => l());
+  return authModeCache;
+}
+
 function isSecureContext() {
   return location.protocol === "https:";
 }

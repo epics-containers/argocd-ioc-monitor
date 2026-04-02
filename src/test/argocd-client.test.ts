@@ -5,6 +5,7 @@ import { argocdFetch, argocdFetchStream, ApiError } from "@/api/argocd-client";
 vi.mock("@/lib/auth-token", () => ({
   applyStoredTokens: vi.fn(),
   getStoredRefreshToken: vi.fn(() => null),
+  getAuthModeSnapshot: vi.fn(() => "manual"),
   onAuthFailure: vi.fn(),
   saveTokens: vi.fn(),
 }));

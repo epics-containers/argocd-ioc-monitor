@@ -48,3 +48,35 @@ resources:
     cpu: 50m
     # @schema description: Memory request
     memory: 64Mi
+
+oauth2Proxy:
+  # @schema description: Enable oauth2-proxy sidecar for Keycloak OIDC authentication
+  enabled: false
+  image:
+    # @schema description: oauth2-proxy container image repository
+    repository: quay.io/oauth2-proxy/oauth2-proxy
+    # @schema description: oauth2-proxy image tag
+    tag: v7.7.1
+    # @schema description: oauth2-proxy image pull policy
+    # @schema enum: [Always, IfNotPresent, Never]
+    pullPolicy: IfNotPresent
+  # @schema description: OIDC client ID registered in Keycloak
+  clientId: ""
+  # @schema description: OIDC issuer URL (e.g. https://identity.example.com/realms/myrealm)
+  issuerUrl: ""
+  # @schema description: Name of existing K8s Secret with keys client-secret and cookie-secret
+  existingSecret: ""
+  # @schema description: Additional command-line arguments for oauth2-proxy
+  # @schema type: array
+  extraArgs: []
+  resources:
+    limits:
+      # @schema description: oauth2-proxy CPU limit
+      cpu: 50m
+      # @schema description: oauth2-proxy memory limit
+      memory: 64Mi
+    requests:
+      # @schema description: oauth2-proxy CPU request
+      cpu: 25m
+      # @schema description: oauth2-proxy memory request
+      memory: 32Mi

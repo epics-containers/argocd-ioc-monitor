@@ -54,6 +54,27 @@ docs-watch:
 pre-commit:
     uv run pre-commit run --all-files --show-diff-on-failure
 
+# Create a SealedSecret for oauth2-proxy (client-secret + cookie-secret)
+seal-secret namespace:
+    #!/bin/bash
+    set -euo pipefail
+    echo "Paste your PGP-encrypted client secret, then press Ctrl-D:"
+    encrypted=$(cat)
+    echo ""
+    echo "Decrypting client secret..."
+    client_secret=$(echo "$encrypted" | gpg --decrypt --quiet 2>/dev/null)
+    cookie_secret=$(openssl rand -base64 32)
+    echo "Generating SealedSecret in namespace '{{namespace}}'..."
+    kubectl create secret generic argocd-monitor-oauth2 \
+        --namespace="{{namespace}}" \
+        --from-literal=client-secret="$client_secret" \
+        --from-literal=cookie-secret="$cookie_secret" \
+        --dry-run=client -o json \
+    | kubeseal --format yaml \
+        --namespace="{{namespace}}" \
+    > helm/argocd-monitor/templates/sealed-secret.yaml
+    echo "Sealed secret written to helm/argocd-monitor/templates/sealed-secret.yaml"
+
 # Authenticate gh CLI with a GitHub PAT (token not stored in shell history)
 gh-auth:
     #!/bin/bash

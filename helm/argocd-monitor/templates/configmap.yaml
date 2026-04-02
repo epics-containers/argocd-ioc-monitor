@@ -6,10 +6,28 @@ metadata:
     {{- include "argocd-monitor.labels" . | nindent 4 }}
 data:
   default.conf: |
+    {{- if .Values.oauth2Proxy.enabled }}
+    # Map the access token from oauth2-proxy header to argocd cookie format
+    map $http_x_forwarded_access_token $argocd_cookie {
+        default "argocd.token=$http_x_forwarded_access_token";
+        ""      $http_cookie;
+    }
+    {{- end }}
+
     server {
         listen 8080;
         root /usr/share/nginx/html;
         index index.html;
+
+        # Auth mode endpoint — lets the frontend know whether oauth2-proxy is active
+        location = /api/auth-mode {
+            default_type application/json;
+            {{- if .Values.oauth2Proxy.enabled }}
+            return 200 '{"mode":"oauth2-proxy"}';
+            {{- else }}
+            return 200 '{"mode":"manual"}';
+            {{- end }}
+        }
 
         # Dedicated location for log streaming — must be above /api/ catch-all
         location ~ ^/api/v1/applications/[^/]+/logs {
@@ -18,7 +36,11 @@ data:
             proxy_ssl_server_name on;
             proxy_set_header Host {{ .Values.argocd.url | trimPrefix "https://" | trimPrefix "http://" }};
             proxy_set_header Accept-Encoding identity;
+            {{- if .Values.oauth2Proxy.enabled }}
+            proxy_set_header Cookie $argocd_cookie;
+            {{- else }}
             proxy_set_header Cookie $http_cookie;
+            {{- end }}
             proxy_pass_header Set-Cookie;
             proxy_http_version 1.1;
             proxy_set_header Connection "";
@@ -36,7 +58,11 @@ data:
             proxy_ssl_server_name on;
             proxy_set_header Host {{ .Values.argocd.url | trimPrefix "https://" | trimPrefix "http://" }};
             proxy_set_header Accept-Encoding identity;
+            {{- if .Values.oauth2Proxy.enabled }}
+            proxy_set_header Cookie $argocd_cookie;
+            {{- else }}
             proxy_set_header Cookie $http_cookie;
+            {{- end }}
             proxy_pass_header Set-Cookie;
             proxy_http_version 1.1;
             proxy_set_header Connection "";
