@@ -3,6 +3,7 @@ import {
   getStoredRefreshToken,
   getAuthModeSnapshot,
   onAuthFailure,
+  redirectToLogin,
   saveTokens,
 } from "@/lib/auth-token";
 
@@ -74,13 +75,20 @@ export async function argocdFetch<T>(
 
   let response = await fetch(`${baseUrl}${path}`, fetchOpts);
 
+  // Detect oauth2-proxy redirect (session expired, proxy redirected to login)
+  if (response.redirected && getAuthModeSnapshot() === "oauth2-proxy") {
+    if (redirectToLogin()) return new Promise<T>(() => {}); // hang while redirecting
+  }
+
   if (response.status === 401) {
-    // In oauth2-proxy mode, the proxy handles token refresh — don't attempt manual refresh
-    if (getAuthModeSnapshot() !== "oauth2-proxy") {
-      const refreshed = await tryRefreshToken();
-      if (refreshed) {
-        response = await fetch(`${baseUrl}${path}`, fetchOpts);
-      }
+    if (getAuthModeSnapshot() === "oauth2-proxy") {
+      // Session expired — redirect browser to re-authenticate via oauth2-proxy
+      if (redirectToLogin()) return new Promise<T>(() => {});
+      throw new ApiError(401, "Unauthenticated");
+    }
+    const refreshed = await tryRefreshToken();
+    if (refreshed) {
+      response = await fetch(`${baseUrl}${path}`, fetchOpts);
     }
     if (response.status === 401) {
       onAuthFailure();
@@ -107,12 +115,18 @@ export async function argocdFetchStream(
 
   let response = await fetch(`${baseUrl}${path}`, fetchOpts);
 
+  if (response.redirected && getAuthModeSnapshot() === "oauth2-proxy") {
+    if (redirectToLogin()) return new Promise<ReadableStream<Uint8Array>>(() => {});
+  }
+
   if (response.status === 401) {
-    if (getAuthModeSnapshot() !== "oauth2-proxy") {
-      const refreshed = await tryRefreshToken();
-      if (refreshed) {
-        response = await fetch(`${baseUrl}${path}`, fetchOpts);
-      }
+    if (getAuthModeSnapshot() === "oauth2-proxy") {
+      if (redirectToLogin()) return new Promise<ReadableStream<Uint8Array>>(() => {});
+      throw new ApiError(401, "Unauthenticated");
+    }
+    const refreshed = await tryRefreshToken();
+    if (refreshed) {
+      response = await fetch(`${baseUrl}${path}`, fetchOpts);
     }
     if (response.status === 401) {
       onAuthFailure();
