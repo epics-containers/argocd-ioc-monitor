@@ -87,6 +87,18 @@ export function applyStoredTokens(): void {
   if (refresh) setCookie("argocd.token.refresh", refresh);
 }
 
+/** Redirect to oauth2-proxy sign-in page for re-authentication.
+ *  Returns false (and skips redirect) if already redirected recently to avoid loops. */
+let lastRedirectTime = 0;
+export function redirectToLogin(): boolean {
+  const now = Date.now();
+  if (now - lastRedirectTime < 30_000) return false;
+  lastRedirectTime = now;
+  const rd = encodeURIComponent(window.location.pathname + window.location.search);
+  window.location.href = `/oauth2/sign_in?rd=${rd}`;
+  return true;
+}
+
 export function saveTokens(authToken: string, refreshToken?: string): void {
   localStorage.setItem(TOKEN_KEY, authToken);
   setCookie("argocd.token", authToken);

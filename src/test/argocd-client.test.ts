@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { argocdFetch, argocdFetchStream, ApiError } from "@/api/argocd-client";
 
 // Mock auth-token module
@@ -7,10 +7,17 @@ vi.mock("@/lib/auth-token", () => ({
   getStoredRefreshToken: vi.fn(() => null),
   getAuthModeSnapshot: vi.fn(() => "manual"),
   onAuthFailure: vi.fn(),
+  redirectToLogin: vi.fn(() => true),
   saveTokens: vi.fn(),
 }));
 
-import { getStoredRefreshToken, onAuthFailure, saveTokens } from "@/lib/auth-token";
+import {
+  getStoredRefreshToken,
+  getAuthModeSnapshot,
+  onAuthFailure,
+  redirectToLogin,
+  saveTokens,
+} from "@/lib/auth-token";
 
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
@@ -145,5 +152,61 @@ describe("argocdFetchStream", () => {
 
     expect(stream).toBeInstanceOf(ReadableStream);
     expect(mockFetch).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("oauth2-proxy mode auth failure", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    vi.mocked(getAuthModeSnapshot).mockReturnValue("oauth2-proxy");
+    vi.mocked(redirectToLogin).mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    vi.mocked(getAuthModeSnapshot).mockReturnValue("manual");
+  });
+
+  it("redirects to login on 401 in oauth2-proxy mode", async () => {
+    mockFetch.mockResolvedValueOnce(textResponse("unauth", 401));
+
+    // redirectToLogin returns true and the function returns a never-resolving promise
+    const promise = argocdFetch("/api/test");
+
+    // Allow the microtask to process
+    await vi.waitFor(() => {
+      expect(redirectToLogin).toHaveBeenCalled();
+    });
+
+    // The promise should not resolve (it hangs while redirecting)
+    let resolved = false;
+    promise.then(() => { resolved = true; }).catch(() => { resolved = true; });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(resolved).toBe(false);
+  });
+
+  it("throws ApiError when redirect is suppressed (loop guard)", async () => {
+    mockFetch.mockResolvedValueOnce(textResponse("unauth", 401));
+    vi.mocked(redirectToLogin).mockReturnValue(false);
+
+    await expect(argocdFetch("/api/test")).rejects.toThrow(ApiError);
+  });
+
+  it("redirects on redirected response in oauth2-proxy mode", async () => {
+    // Simulate what fetch returns when it follows a redirect
+    const followed = new Response("login page", { status: 200 });
+    Object.defineProperty(followed, "redirected", { value: true });
+    mockFetch.mockResolvedValueOnce(followed);
+
+    const promise = argocdFetch("/api/test");
+
+    await vi.waitFor(() => {
+      expect(redirectToLogin).toHaveBeenCalled();
+    });
+
+    let resolved = false;
+    promise.then(() => { resolved = true; }).catch(() => { resolved = true; });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(resolved).toBe(false);
   });
 });
