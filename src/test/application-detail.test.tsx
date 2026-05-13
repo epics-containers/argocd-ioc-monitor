@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -16,7 +16,16 @@ vi.mock("@/hooks/use-restart-pod", () => ({
   useRestartPod: () => ({ isPending: false, mutate: vi.fn() }),
 }));
 
+vi.mock("@/hooks/use-set-enabled", () => ({
+  useSetEnabled: () => ({ isPending: false, mutate: vi.fn() }),
+}));
+
+vi.mock("@/hooks/use-stoppable-workload", () => ({
+  useStoppableWorkload: vi.fn(),
+}));
+
 import { useApplication, useResourceTree } from "@/hooks/use-application";
+import { useStoppableWorkload } from "@/hooks/use-stoppable-workload";
 
 function renderPage(name = "test-app", appNamespace = "default") {
   const queryClient = new QueryClient({
@@ -40,9 +49,10 @@ function renderPage(name = "test-app", appNamespace = "default") {
 function makeApp(overrides: {
   health?: { status: string } | undefined;
   sync?: { status: string } | undefined;
+  labels?: Record<string, string>;
 } = {}): Application {
   return {
-    metadata: { name: "test-app", namespace: "default" },
+    metadata: { name: "test-app", namespace: "default", labels: overrides.labels },
     spec: {
       project: "default",
       destination: { namespace: "test-ns" },
@@ -55,6 +65,13 @@ function makeApp(overrides: {
 }
 
 describe("ApplicationDetailPage", () => {
+  beforeEach(() => {
+    vi.mocked(useStoppableWorkload).mockReturnValue({
+      data: null,
+      isLoading: false,
+    } as ReturnType<typeof useStoppableWorkload>);
+  });
+
   it("renders when health and sync are present", () => {
     vi.mocked(useApplication).mockReturnValue({
       data: makeApp({
@@ -142,5 +159,65 @@ describe("ApplicationDetailPage", () => {
     renderPage();
 
     expect(screen.getByText("Loading application...")).toBeInTheDocument();
+  });
+
+  it("hides Start/Stop button when workload is not stoppable", () => {
+    vi.mocked(useApplication).mockReturnValue({
+      data: makeApp({ health: { status: "Healthy" }, sync: { status: "Synced" } }),
+      isLoading: false,
+    } as ReturnType<typeof useApplication>);
+    vi.mocked(useResourceTree).mockReturnValue({
+      data: { nodes: [] } as ResourceTree,
+      isLoading: false,
+    } as ReturnType<typeof useResourceTree>);
+
+    renderPage();
+
+    expect(screen.queryByRole("button", { name: /Stop/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Start/i })).not.toBeInTheDocument();
+  });
+
+  it("renders Stop button when running and stoppable", () => {
+    vi.mocked(useApplication).mockReturnValue({
+      data: makeApp({ health: { status: "Healthy" }, sync: { status: "Synced" } }),
+      isLoading: false,
+    } as ReturnType<typeof useApplication>);
+    vi.mocked(useResourceTree).mockReturnValue({
+      data: { nodes: [] } as ResourceTree,
+      isLoading: false,
+    } as ReturnType<typeof useResourceTree>);
+    vi.mocked(useStoppableWorkload).mockReturnValue({
+      data: { kind: "StatefulSet", name: "test-app", namespace: "ns", group: "apps", version: "v1" },
+      isLoading: false,
+    } as ReturnType<typeof useStoppableWorkload>);
+
+    renderPage();
+
+    expect(screen.getByRole("button", { name: /Stop/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Stopped/)).not.toBeInTheDocument();
+  });
+
+  it("renders Start button and Stopped badge when STOPPED=1", () => {
+    vi.mocked(useApplication).mockReturnValue({
+      data: makeApp({
+        health: { status: "Healthy" },
+        sync: { status: "Synced" },
+        labels: { STOPPED: "1" },
+      }),
+      isLoading: false,
+    } as ReturnType<typeof useApplication>);
+    vi.mocked(useResourceTree).mockReturnValue({
+      data: { nodes: [] } as ResourceTree,
+      isLoading: false,
+    } as ReturnType<typeof useResourceTree>);
+    vi.mocked(useStoppableWorkload).mockReturnValue({
+      data: { kind: "StatefulSet", name: "test-app", namespace: "ns", group: "apps", version: "v1" },
+      isLoading: false,
+    } as ReturnType<typeof useStoppableWorkload>);
+
+    renderPage();
+
+    expect(screen.getByRole("button", { name: /Start/i })).toBeInTheDocument();
+    expect(screen.getByText("Stopped")).toBeInTheDocument();
   });
 });

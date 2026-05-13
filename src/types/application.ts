@@ -28,6 +28,19 @@ export interface ApplicationSource {
   path?: string;
   targetRevision?: string;
   chart?: string;
+  helm?: ApplicationSourceHelm;
+}
+
+export interface ApplicationSourceHelm {
+  parameters?: HelmParameter[];
+  valueFiles?: string[];
+  valuesObject?: unknown;
+}
+
+export interface HelmParameter {
+  name: string;
+  value: string;
+  forceString?: boolean;
 }
 
 export interface ApplicationDestination {

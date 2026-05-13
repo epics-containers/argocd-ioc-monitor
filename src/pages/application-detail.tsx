@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router";
-import { ArrowLeft, ArrowUpDown, RotateCcw, ScrollText } from "lucide-react";
+import { ArrowLeft, ArrowUpDown, Play, RotateCcw, ScrollText, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -16,6 +16,8 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { useApplication, useResourceTree } from "@/hooks/use-application";
 import { useRestartPod } from "@/hooks/use-restart-pod";
+import { useSetEnabled } from "@/hooks/use-set-enabled";
+import { useStoppableWorkload } from "@/hooks/use-stoppable-workload";
 import { formatAge } from "@/lib/format";
 import type { ResourceNode } from "@/types/resource";
 
@@ -25,10 +27,14 @@ export function ApplicationDetailPage() {
   const appNamespace = searchParams.get("appNamespace") ?? undefined;
   const { data: app, isLoading: appLoading } = useApplication(name!, appNamespace);
   const { data: tree, isLoading: treeLoading } = useResourceTree(name!, appNamespace);
+  const { data: stoppable } = useStoppableWorkload(name!, appNamespace);
   const restartMutation = useRestartPod();
+  const setEnabledMutation = useSetEnabled();
 
   const [restartTarget, setRestartTarget] = useState<ResourceNode | null>(null);
   const [restartError, setRestartError] = useState<string | null>(null);
+  const [stopConfirmOpen, setStopConfirmOpen] = useState(false);
+  const [setEnabledError, setSetEnabledError] = useState<string | null>(null);
   const [podSort, setPodSort] = useState<{ key: string; asc: boolean }>({ key: "name", asc: true });
   const tableFilters = sessionStorage.getItem("tableFilters");
   const backTo = tableFilters ? `/?${tableFilters}` : "/";
@@ -66,6 +72,28 @@ export function ApplicationDetailPage() {
   }
 
   const namespace = app.spec.destination.namespace ?? "";
+  const isStopped = app.metadata.labels?.STOPPED === "1";
+  const parentName = app.spec.project;
+  const parentNamespace = app.metadata.namespace;
+
+  const applyEnabled = (enabled: boolean) => {
+    setSetEnabledError(null);
+    setEnabledMutation.mutate(
+      {
+        parentName,
+        serviceName: app.metadata.name,
+        enabled,
+        parentNamespace,
+      },
+      {
+        onSuccess: () => setStopConfirmOpen(false),
+        onError: (err) => {
+          setStopConfirmOpen(false);
+          setSetEnabledError(err.message);
+        },
+      },
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -80,16 +108,42 @@ export function ApplicationDetailPage() {
       </div>
 
       <div className="space-y-4">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            {app.metadata.name}
-          </h2>
-          <div className="flex items-center gap-3">
-            <HealthBadge status={app.status.health?.status ?? "Unknown"} />
-            <SyncBadge status={app.status.sync?.status ?? "Unknown"} />
-            <Badge variant="secondary">project: {app.spec.project}</Badge>
-            {namespace && <Badge variant="outline">ns: {namespace}</Badge>}
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {app.metadata.name}
+            </h2>
+            <div className="flex items-center gap-3">
+              <HealthBadge status={app.status.health?.status ?? "Unknown"} />
+              <SyncBadge status={app.status.sync?.status ?? "Unknown"} />
+              <Badge variant="secondary">project: {app.spec.project}</Badge>
+              {namespace && <Badge variant="outline">ns: {namespace}</Badge>}
+              {isStopped && <Badge variant="destructive">Stopped</Badge>}
+            </div>
           </div>
+          {stoppable && (
+            isStopped ? (
+              <Button
+                variant="default"
+                size="sm"
+                disabled={setEnabledMutation.isPending}
+                onClick={() => applyEnabled(true)}
+              >
+                <Play className="mr-1 h-4 w-4" />
+                Start
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={setEnabledMutation.isPending}
+                onClick={() => setStopConfirmOpen(true)}
+              >
+                <Square className="mr-1 h-4 w-4" />
+                Stop
+              </Button>
+            )
+          )}
         </div>
 
         <div className="rounded-md border p-4">
@@ -147,6 +201,12 @@ export function ApplicationDetailPage() {
       {restartError && (
         <p className="text-sm text-destructive">
           Restart failed: {restartError}
+        </p>
+      )}
+
+      {setEnabledError && (
+        <p className="text-sm text-destructive">
+          Stop/Start failed: {setEnabledError}
         </p>
       )}
 
@@ -244,6 +304,17 @@ export function ApplicationDetailPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={stopConfirmOpen}
+        onOpenChange={setStopConfirmOpen}
+        title="Stop Service"
+        description={`Stop "${app.metadata.name}"? This sets services.${app.metadata.name}.enabled=false on the parent application "${parentName}", and ArgoCD will scale the workload to zero replicas.`}
+        confirmLabel="Stop"
+        variant="destructive"
+        loading={setEnabledMutation.isPending}
+        onConfirm={() => applyEnabled(false)}
+      />
 
       <ConfirmDialog
         open={restartTarget !== null}

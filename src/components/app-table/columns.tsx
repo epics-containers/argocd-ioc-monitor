@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Link } from "react-router";
 import { ArrowUpDown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { HealthBadge, SyncBadge } from "./status-badge";
 import type { Application } from "@/types/application";
@@ -8,8 +9,8 @@ import type { Application } from "@/types/application";
 /** Label prefixes to strip from display for brevity. */
 const STRIP_PREFIXES = ["argocd.argoproj.io/"];
 
-/** Labels to hide from the Properties column. */
-const HIDDEN_LABELS = new Set(["argocd.argoproj.io/instance"]);
+/** Labels to hide from the Properties column (rendered elsewhere or noise). */
+const HIDDEN_LABELS = new Set(["argocd.argoproj.io/instance", "STOPPED"]);
 
 function formatLabelKey(key: string): string {
   for (const prefix of STRIP_PREFIXES) {
@@ -59,7 +60,12 @@ export const columns: ColumnDef<Application>[] = [
       </Button>
     ),
     cell: ({ row }) => (
-      <HealthBadge status={row.original.status.health?.status ?? "Unknown"} />
+      <div className="flex items-center gap-2">
+        <HealthBadge status={row.original.status.health?.status ?? "Unknown"} />
+        {row.original.metadata.labels?.STOPPED === "1" && (
+          <Badge variant="destructive">Stopped</Badge>
+        )}
+      </div>
     ),
     filterFn: (row, _id, value: string[]) =>
       value.includes(row.original.status.health?.status ?? "Unknown"),
