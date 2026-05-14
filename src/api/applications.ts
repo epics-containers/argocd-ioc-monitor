@@ -2,6 +2,7 @@ import { argocdFetch, ApiError } from "./argocd-client";
 import type {
   Application,
   ApplicationList,
+  ApplicationSpec,
   HelmParameter,
 } from "@/types/application";
 
@@ -28,18 +29,15 @@ export async function getApplication(name: string, appNamespace?: string): Promi
   );
 }
 
-function putApplication(
+function putApplicationSpec(
   name: string,
-  body: Application,
+  spec: ApplicationSpec,
   appNamespace?: string,
-): Promise<Application> {
-  const params = new URLSearchParams();
-  if (appNamespace) {
-    params.set("appNamespace", appNamespace);
-  }
-  const query = params.toString();
-  return argocdFetch<Application>(
-    `/api/v1/applications/${encodeURIComponent(name)}${query ? `?${query}` : ""}`,
+): Promise<unknown> {
+  const body: Record<string, unknown> = { name, spec, validate: false };
+  if (appNamespace) body.appNamespace = appNamespace;
+  return argocdFetch<unknown>(
+    `/api/v1/applications/${encodeURIComponent(name)}/spec`,
     { method: "PUT", body: JSON.stringify(body) },
   );
 }
@@ -78,8 +76,11 @@ function withServiceEnabled(
 
 /**
  * Set `services.<serviceName>.enabled=<enabled>` on the parent ArgoCD Application.
- * Performs a read-modify-write of the full spec because ArgoCD has no narrower endpoint.
- * Retries once on 409 (resourceVersion mismatch) by refetching the parent.
+ *
+ * Writes via PUT /api/v1/applications/{name}/spec (the UpdateSpec RPC, matching
+ * `argocd app set -p`). The whole-app Update RPC re-validates destination, sources
+ * and pending operation fields, which can trip RBAC checks the user isn't expected
+ * to satisfy for a parameter override; UpdateSpec with validate=false skips that.
  */
 export async function setServiceEnabled(
   parentName: string,
@@ -89,9 +90,9 @@ export async function setServiceEnabled(
 ): Promise<void> {
   let parent = await getApplication(parentName, parentNamespace);
   try {
-    await putApplication(
+    await putApplicationSpec(
       parentName,
-      withServiceEnabled(parent, serviceName, enabled),
+      withServiceEnabled(parent, serviceName, enabled).spec,
       parentNamespace,
     );
     return;
@@ -99,9 +100,9 @@ export async function setServiceEnabled(
     if (!(err instanceof ApiError) || err.status !== 409) throw err;
   }
   parent = await getApplication(parentName, parentNamespace);
-  await putApplication(
+  await putApplicationSpec(
     parentName,
-    withServiceEnabled(parent, serviceName, enabled),
+    withServiceEnabled(parent, serviceName, enabled).spec,
     parentNamespace,
   );
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { setServiceEnabled } from "@/api/applications";
-import type { Application } from "@/types/application";
+import type { Application, ApplicationSpec } from "@/types/application";
 
 vi.mock("@/lib/auth-token", () => ({
   applyStoredTokens: vi.fn(),
@@ -45,11 +45,25 @@ function makeParent(parameters: { name: string; value: string }[] = []): Applica
   } as unknown as Application;
 }
 
-function lastPutBody(): Application {
+interface SpecPutBody {
+  name: string;
+  spec: ApplicationSpec;
+  validate: boolean;
+  appNamespace?: string;
+}
+
+function lastPut(): { url: string; body: SpecPutBody } {
   const calls = mockFetch.mock.calls as [string, RequestInit | undefined][];
   const putCall = [...calls].reverse().find((c) => c[1]?.method === "PUT");
   if (!putCall) throw new Error("no PUT call recorded");
-  return JSON.parse(putCall[1]!.body as string) as Application;
+  return {
+    url: putCall[0],
+    body: JSON.parse(putCall[1]!.body as string) as SpecPutBody,
+  };
+}
+
+function lastPutSpec(): ApplicationSpec {
+  return lastPut().body.spec;
 }
 
 describe("setServiceEnabled", () => {
@@ -63,8 +77,21 @@ describe("setServiceEnabled", () => {
 
     await setServiceEnabled("parent-app", "svc-a", false, "argocd");
 
-    const params = lastPutBody().spec.source!.helm!.parameters!;
+    const params = lastPutSpec().source!.helm!.parameters!;
     expect(params).toEqual([{ name: "services.svc-a.enabled", value: "false" }]);
+  });
+
+  it("writes via the UpdateSpec endpoint with validate=false", async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse(makeParent([])));
+    mockFetch.mockResolvedValueOnce(jsonResponse(makeParent([])));
+
+    await setServiceEnabled("parent-app", "svc-a", true, "argocd");
+
+    const { url, body } = lastPut();
+    expect(url).toBe("/api/v1/applications/parent-app/spec");
+    expect(body.name).toBe("parent-app");
+    expect(body.validate).toBe(false);
+    expect(body.appNamespace).toBe("argocd");
   });
 
   it("replaces the parameter when present with a different value", async () => {
@@ -77,7 +104,7 @@ describe("setServiceEnabled", () => {
 
     await setServiceEnabled("parent-app", "svc-a", false, "argocd");
 
-    const params = lastPutBody().spec.source!.helm!.parameters!;
+    const params = lastPutSpec().source!.helm!.parameters!;
     expect(params).toContainEqual({ name: "services.svc-a.enabled", value: "false" });
     expect(params).toContainEqual({ name: "global.commitHash", value: "abc" });
     expect(params.filter((p) => p.name === "services.svc-a.enabled")).toHaveLength(1);
@@ -90,7 +117,7 @@ describe("setServiceEnabled", () => {
 
     await setServiceEnabled("parent-app", "svc-a", false, "argocd");
 
-    const params = lastPutBody().spec.source!.helm!.parameters!;
+    const params = lastPutSpec().source!.helm!.parameters!;
     expect(params).toEqual([{ name: "services.svc-a.enabled", value: "false" }]);
   });
 
@@ -103,7 +130,7 @@ describe("setServiceEnabled", () => {
     await setServiceEnabled("parent-app", "svc-a", true, "argocd");
 
     expect(mockFetch).toHaveBeenCalledTimes(4);
-    const params = lastPutBody().spec.source!.helm!.parameters!;
+    const params = lastPutSpec().source!.helm!.parameters!;
     expect(params).toEqual([{ name: "services.svc-a.enabled", value: "true" }]);
   });
 
