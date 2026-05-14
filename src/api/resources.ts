@@ -22,6 +22,7 @@ export async function getPodResource(
 ): Promise<PodResource> {
   const params = new URLSearchParams({
     name: podName,
+    resourceName: podName,
     namespace,
     kind: "Pod",
     version: "v1",
@@ -59,6 +60,7 @@ export async function getStoppableWorkload(
 
   const params = new URLSearchParams({
     name: workload.name,
+    resourceName: workload.name,
     namespace: workload.namespace,
     group: workload.group ?? "apps",
     kind: workload.kind,

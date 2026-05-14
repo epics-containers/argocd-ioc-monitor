@@ -27,7 +27,7 @@ export function ApplicationDetailPage() {
   const appNamespace = searchParams.get("appNamespace") ?? undefined;
   const { data: app, isLoading: appLoading } = useApplication(name!, appNamespace);
   const { data: tree, isLoading: treeLoading } = useResourceTree(name!, appNamespace);
-  const { data: stoppable } = useStoppableWorkload(name!, appNamespace);
+  const { data: stoppable, error: stoppableError } = useStoppableWorkload(name!, appNamespace);
   const restartMutation = useRestartPod();
   const setEnabledMutation = useSetEnabled();
 
@@ -207,6 +207,12 @@ export function ApplicationDetailPage() {
       {setEnabledError && (
         <p className="text-sm text-destructive">
           Stop/Start failed: {setEnabledError}
+        </p>
+      )}
+
+      {stoppableError && (
+        <p className="text-sm text-destructive">
+          Could not determine Start/Stop availability: {stoppableError.message}
         </p>
       )}
 
