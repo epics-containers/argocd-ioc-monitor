@@ -73,8 +73,11 @@ export function ApplicationDetailPage() {
 
   const namespace = app.spec.destination.namespace ?? "";
   const isStopped = app.metadata.labels?.STOPPED === "1";
-  const parentName = app.spec.project;
   const parentNamespace = app.metadata.namespace;
+  // Convention: child app's namespace `<beamline>-beamline` is deployed by a
+  // parent Application named `<beamline>` in the same namespace. Replace with
+  // an explicit annotation/label on the child once one exists (see #44).
+  const parentName = parentNamespace.replace(/-beamline$/, "");
 
   const applyEnabled = (enabled: boolean) => {
     setSetEnabledError(null);
