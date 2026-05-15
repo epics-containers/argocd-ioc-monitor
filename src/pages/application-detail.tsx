@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router";
-import { ArrowLeft, ArrowUpDown, RotateCcw, ScrollText } from "lucide-react";
+import { ArrowLeft, ArrowUpDown, Loader2, Play, RotateCcw, ScrollText, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -16,6 +16,8 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { LoadingSpinner } from "@/components/shared/loading-spinner";
 import { useApplication, useResourceTree } from "@/hooks/use-application";
 import { useRestartPod } from "@/hooks/use-restart-pod";
+import { useSetEnabled } from "@/hooks/use-set-enabled";
+import { useStoppableWorkload } from "@/hooks/use-stoppable-workload";
 import { formatAge } from "@/lib/format";
 import type { ResourceNode } from "@/types/resource";
 
@@ -23,13 +25,49 @@ export function ApplicationDetailPage() {
   const { name } = useParams<{ name: string }>();
   const [searchParams] = useSearchParams();
   const appNamespace = searchParams.get("appNamespace") ?? undefined;
-  const { data: app, isLoading: appLoading } = useApplication(name!, appNamespace);
-  const { data: tree, isLoading: treeLoading } = useResourceTree(name!, appNamespace);
+  const [pendingAction, setPendingAction] = useState<"starting" | "stopping" | null>(null);
+  // After the STOPPED label flips, ArgoCD still needs a few seconds to finish
+  // syncing replicas, terminate/start pods, and settle sync status. Keep polling
+  // fast through that window so the pod list and sync badge converge without a
+  // manual refresh.
+  const [isSettling, setIsSettling] = useState(false);
+  const pollInterval = pendingAction || isSettling ? 2000 : undefined;
+  const { data: app, isLoading: appLoading } = useApplication(name!, appNamespace, pollInterval);
+  const { data: tree, isLoading: treeLoading } = useResourceTree(name!, appNamespace, pollInterval);
+  const { data: stoppable, error: stoppableError } = useStoppableWorkload(name!, appNamespace);
   const restartMutation = useRestartPod();
+  const setEnabledMutation = useSetEnabled();
 
   const [restartTarget, setRestartTarget] = useState<ResourceNode | null>(null);
   const [restartError, setRestartError] = useState<string | null>(null);
+  const [stopConfirmOpen, setStopConfirmOpen] = useState(false);
+  const [setEnabledError, setSetEnabledError] = useState<string | null>(null);
   const [podSort, setPodSort] = useState<{ key: string; asc: boolean }>({ key: "name", asc: true });
+
+  const isStopped = app?.metadata.labels?.STOPPED === "1";
+
+  // Drop the spinner once ArgoCD has reflected the requested change in the
+  // child's STOPPED label, and enter a brief settling window so polling keeps
+  // running until pods/sync converge. Adjusting state during render is React's
+  // idiomatic pattern here (avoids the cascading-effect lint rule).
+  if (pendingAction && app && isStopped === (pendingAction === "stopping")) {
+    setPendingAction(null);
+    setIsSettling(true);
+  }
+
+  // Safety net: drop the spinner after 2 minutes if ArgoCD never converges.
+  useEffect(() => {
+    if (!pendingAction) return;
+    const t = setTimeout(() => setPendingAction(null), 120_000);
+    return () => clearTimeout(t);
+  }, [pendingAction]);
+
+  // End the settling window after 30s of fast polling post-flip.
+  useEffect(() => {
+    if (!isSettling) return;
+    const t = setTimeout(() => setIsSettling(false), 30_000);
+    return () => clearTimeout(t);
+  }, [isSettling]);
   const tableFilters = sessionStorage.getItem("tableFilters");
   const backTo = tableFilters ? `/?${tableFilters}` : "/";
   const pods = useMemo(() => {
@@ -66,6 +104,32 @@ export function ApplicationDetailPage() {
   }
 
   const namespace = app.spec.destination.namespace ?? "";
+  const parentNamespace = app.metadata.namespace;
+  // Convention: child app's namespace `<beamline>-beamline` is deployed by a
+  // parent Application named `<beamline>` in the same namespace. Replace with
+  // an explicit annotation/label on the child once one exists (see #44).
+  const parentName = parentNamespace.replace(/-beamline$/, "");
+
+  const applyEnabled = (enabled: boolean) => {
+    setSetEnabledError(null);
+    setPendingAction(enabled ? "starting" : "stopping");
+    setEnabledMutation.mutate(
+      {
+        parentName,
+        serviceName: app.metadata.name,
+        enabled,
+        parentNamespace,
+      },
+      {
+        onSuccess: () => setStopConfirmOpen(false),
+        onError: (err) => {
+          setStopConfirmOpen(false);
+          setSetEnabledError(err.message);
+          setPendingAction(null);
+        },
+      },
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -80,16 +144,52 @@ export function ApplicationDetailPage() {
       </div>
 
       <div className="space-y-4">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold tracking-tight">
-            {app.metadata.name}
-          </h2>
-          <div className="flex items-center gap-3">
-            <HealthBadge status={app.status.health?.status ?? "Unknown"} />
-            <SyncBadge status={app.status.sync?.status ?? "Unknown"} />
-            <Badge variant="secondary">project: {app.spec.project}</Badge>
-            {namespace && <Badge variant="outline">ns: {namespace}</Badge>}
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {app.metadata.name}
+            </h2>
+            <div className="flex items-center gap-3">
+              <HealthBadge status={app.status.health?.status ?? "Unknown"} />
+              <SyncBadge status={app.status.sync?.status ?? "Unknown"} />
+              <Badge variant="secondary">project: {app.spec.project}</Badge>
+              {namespace && <Badge variant="outline">ns: {namespace}</Badge>}
+              {pendingAction ? (
+                <Badge variant="outline" className="gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  {pendingAction === "starting" ? "Starting..." : "Stopping..."}
+                </Badge>
+              ) : (
+                isStopped && <Badge variant="destructive">Stopped</Badge>
+              )}
+            </div>
           </div>
+          {stoppable && (
+            pendingAction ? (
+              <Button variant="outline" size="sm" disabled>
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                {pendingAction === "starting" ? "Starting..." : "Stopping..."}
+              </Button>
+            ) : isStopped ? (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => applyEnabled(true)}
+              >
+                <Play className="mr-1 h-4 w-4" />
+                Start
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setStopConfirmOpen(true)}
+              >
+                <Square className="mr-1 h-4 w-4" />
+                Stop
+              </Button>
+            )
+          )}
         </div>
 
         <div className="rounded-md border p-4">
@@ -147,6 +247,18 @@ export function ApplicationDetailPage() {
       {restartError && (
         <p className="text-sm text-destructive">
           Restart failed: {restartError}
+        </p>
+      )}
+
+      {setEnabledError && (
+        <p className="text-sm text-destructive">
+          Stop/Start failed: {setEnabledError}
+        </p>
+      )}
+
+      {stoppableError && (
+        <p className="text-sm text-destructive">
+          Could not determine Start/Stop availability: {stoppableError.message}
         </p>
       )}
 
@@ -244,6 +356,17 @@ export function ApplicationDetailPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={stopConfirmOpen}
+        onOpenChange={setStopConfirmOpen}
+        title="Stop Service"
+        description={`Stop "${app.metadata.name}"? This sets services.${app.metadata.name}.enabled=false on the parent application "${parentName}", and ArgoCD will scale the workload to zero replicas.`}
+        confirmLabel="Stop"
+        variant="destructive"
+        loading={setEnabledMutation.isPending}
+        onConfirm={() => applyEnabled(false)}
+      />
 
       <ConfirmDialog
         open={restartTarget !== null}

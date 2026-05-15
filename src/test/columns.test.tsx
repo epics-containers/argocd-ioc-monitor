@@ -13,12 +13,13 @@ function makeApp(overrides: {
   health?: { status: string } | undefined;
   sync?: { status: string } | undefined;
   name?: string;
+  labels?: Record<string, string>;
 } = {}): Application {
   return {
     metadata: {
       name: overrides.name ?? "test-app",
       namespace: "default",
-      labels: {},
+      labels: overrides.labels ?? {},
     },
     spec: {
       project: "default",
@@ -92,5 +93,28 @@ describe("columns", () => {
 
     expect(screen.getByText("Missing")).toBeInTheDocument();
     expect(screen.getByText("OutOfSync")).toBeInTheDocument();
+  });
+
+  it("renders Stopped badge when STOPPED label is set", () => {
+    const app = makeApp({
+      health: { status: "Healthy" },
+      sync: { status: "Synced" },
+      labels: { STOPPED: "1" },
+    });
+
+    render(<TestTable data={[app]} />);
+
+    expect(screen.getByText("Stopped")).toBeInTheDocument();
+  });
+
+  it("does not render Stopped badge without STOPPED label", () => {
+    const app = makeApp({
+      health: { status: "Healthy" },
+      sync: { status: "Synced" },
+    });
+
+    render(<TestTable data={[app]} />);
+
+    expect(screen.queryByText("Stopped")).not.toBeInTheDocument();
   });
 });
