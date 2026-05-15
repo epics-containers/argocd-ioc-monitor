@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>ArgoCD Monitor &#8212; argocd-monitor 0.5.3-beta.1-2-g21edf3c documentation</title>
+    <title>ArgoCD Monitor &#8212; argocd-monitor 0.5.3-beta.1-4-g3f2be8d documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=93533eb6"></script>
+    <script src="_static/documentation_options.js?v=5897ea6d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -416,6 +416,7 @@
 <li><p>Detailed application view with pod info, images, and age</p></li>
 <li><p>Pod log streaming with container selection</p></li>
 <li><p>Pod restart with confirmation dialog</p></li>
+<li><p>Start/Stop services (writes <code class="docutils literal notranslate"><span class="pre">services.&lt;svc&gt;.enabled=&lt;bool&gt;</span></code> to the parent application)</p></li>
 <li><p>Automatic token refresh for uninterrupted sessions</p></li>
 <li><p>Light and dark theme support</p></li>
 </ul>
@@ -455,6 +456,20 @@ code<span class="w"> </span>argocd-monitor
 <span class="w">  </span>--set<span class="w"> </span>ingress.host<span class="o">=</span>argocd-monitor.example.com
 </pre></div>
 </div>
+</section>
+<section id="required-argocd-permissions">
+<h2>Required ArgoCD permissions<a class="headerlink" href="#required-argocd-permissions" title="Link to this heading">#</a></h2>
+<p>The list / detail / log / pod-restart features only need read + <code class="docutils literal notranslate"><span class="pre">delete</span></code> on <code class="docutils literal notranslate"><span class="pre">applications</span></code>.
+The <strong>Start/Stop</strong> action sets a Helm parameter override on the parent application; this
+maps to the <code class="docutils literal notranslate"><span class="pre">override</span></code> action on the <code class="docutils literal notranslate"><span class="pre">applications</span></code> resource in ArgoCD RBAC. Whichever role
+the Monitor’s identity binds to needs at least:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>p, role:argocd-monitor, applications, get, */*, allow
+p, role:argocd-monitor, applications, override, */*, allow
+</pre></div>
+</div>
+<p>Scope the project/object glob to whatever subset of applications you want operators to be
+able to stop. If your ArgoCD version still requires the broader <code class="docutils literal notranslate"><span class="pre">applications,</span> <span class="pre">update</span></code>
+action for parameter-only updates, swap <code class="docutils literal notranslate"><span class="pre">override</span></code> for <code class="docutils literal notranslate"><span class="pre">update</span></code>.</p>
 </section>
 <section id="how-the-documentation-is-structured">
 <h2>How the documentation is structured<a class="headerlink" href="#how-the-documentation-is-structured" title="Link to this heading">#</a></h2>
