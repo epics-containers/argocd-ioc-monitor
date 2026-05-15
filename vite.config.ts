@@ -32,8 +32,23 @@ export default defineConfig(({ mode }) => {
     }
   }
 
+  // Dev-only middleware that mimics the nginx /api/client-ip endpoint so the
+  // header IP display works under `vite dev` (otherwise the request gets
+  // proxied to ArgoCD, which 404s).
+  const devClientIpPlugin = {
+    name: 'dev-client-ip',
+    configureServer(server: any) {
+      server.middlewares.use('/api/client-ip', (req: any, res: any) => {
+        const forwardedFor = (req.headers['x-forwarded-for'] as string | undefined) ?? '';
+        const ip = (req.socket?.remoteAddress as string | undefined) ?? '';
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ ip, forwardedFor }));
+      });
+    },
+  }
+
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), devClientIpPlugin],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
