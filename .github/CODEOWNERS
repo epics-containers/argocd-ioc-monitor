@@ -1,0 +1,10 @@
+* @gilesknap
+
+/package.json       @gilesknap
+/package-lock.json  @gilesknap
+/pyproject.toml     @gilesknap
+/uv.lock            @gilesknap
+/.npmrc             @gilesknap
+/.github/           @gilesknap
+/docker/            @gilesknap
+/helm/              @gilesknap
