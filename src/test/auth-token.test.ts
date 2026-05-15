@@ -1,10 +1,12 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import {
   saveTokens,
   getStoredToken,
   getStoredRefreshToken,
   clearStoredToken,
   onAuthFailure,
+  fetchAuthMode,
+  __resetAuthModeForTests,
 } from "@/lib/auth-token";
 
 describe("auth-token", () => {
@@ -44,5 +46,47 @@ describe("auth-token", () => {
 
     expect(getStoredToken()).toBeNull();
     expect(getStoredRefreshToken()).toBe("refresh");
+  });
+});
+
+describe("fetchAuthMode", () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    __resetAuthModeForTests();
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("returns the served mode when nginx responds with valid JSON", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response('{"mode":"oauth2-proxy"}', { status: 200, headers: { "Content-Type": "application/json" } }),
+    );
+
+    await expect(fetchAuthMode()).resolves.toBe("oauth2-proxy");
+  });
+
+  it("falls back to manual when the endpoint isn't found (dev/devcontainer)", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("Not Found", { status: 404 }));
+
+    await expect(fetchAuthMode()).resolves.toBe("manual");
+  });
+
+  it("falls back to manual when the response is valid JSON without a recognised mode", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response('{"error":"unknown route"}', { status: 200, headers: { "Content-Type": "application/json" } }),
+    );
+
+    await expect(fetchAuthMode()).resolves.toBe("manual");
+  });
+
+  it("falls back to manual when fetch rejects (network error)", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("network down"));
+
+    await expect(fetchAuthMode()).resolves.toBe("manual");
   });
 });

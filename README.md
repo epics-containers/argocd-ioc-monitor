@@ -18,6 +18,7 @@ Releases        | <https://github.com/epics-containers/argocd-monitor/releases>
 - Detailed application view with pod info, images, and age
 - Pod log streaming with container selection
 - Pod restart with confirmation dialog
+- Start/Stop services (writes `services.<svc>.enabled=<bool>` to the parent application)
 - Automatic token refresh for uninterrupted sessions
 - Light and dark theme support
 
@@ -56,6 +57,22 @@ helm install argocd-monitor oci://ghcr.io/epics-containers/charts/argocd-monitor
   --set ingress.enabled=true \
   --set ingress.host=argocd-monitor.example.com
 ```
+
+## Required ArgoCD permissions
+
+The list / detail / log / pod-restart features only need read + `delete` on `applications`.
+The **Start/Stop** action sets a Helm parameter override on the parent application; this
+maps to the `override` action on the `applications` resource in ArgoCD RBAC. Whichever role
+the Monitor's identity binds to needs at least:
+
+```text
+p, role:argocd-monitor, applications, get, */*, allow
+p, role:argocd-monitor, applications, override, */*, allow
+```
+
+Scope the project/object glob to whatever subset of applications you want operators to be
+able to stop. If your ArgoCD version still requires the broader `applications, update`
+action for parameter-only updates, swap `override` for `update`.
 
 <!-- README only content. Anything below this line won't be included in index.md -->
 

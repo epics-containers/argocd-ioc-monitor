@@ -16,14 +16,26 @@ export function getAuthModeSnapshot(): AuthMode | null {
   return authModeCache;
 }
 
+export function __resetAuthModeForTests(): void {
+  authModeCache = null;
+}
+
 export async function fetchAuthMode(): Promise<AuthMode> {
   if (authModeCache) return authModeCache;
+  // Default to manual so the dev/devcontainer setup (where /api/auth-mode
+  // is proxied to ArgoCD, which has no such endpoint) still shows the
+  // token dialog. Production nginx serves a real {mode: ...} response.
+  authModeCache = "manual";
   try {
     const res = await fetch("/api/auth-mode");
-    const data = (await res.json()) as { mode: AuthMode };
-    authModeCache = data.mode;
+    if (res.ok) {
+      const data = (await res.json()) as { mode?: unknown };
+      if (data.mode === "oauth2-proxy" || data.mode === "manual" || data.mode === "anonymous") {
+        authModeCache = data.mode;
+      }
+    }
   } catch {
-    authModeCache = "manual";
+    // keep manual fallback
   }
   authModeListeners.forEach((l) => l());
   return authModeCache;
