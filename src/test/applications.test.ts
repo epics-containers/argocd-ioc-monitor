@@ -45,25 +45,18 @@ function makeParent(parameters: { name: string; value: string }[] = []): Applica
   } as unknown as Application;
 }
 
-interface SpecPutBody {
-  name: string;
-  spec: ApplicationSpec;
-  validate: boolean;
-  appNamespace?: string;
-}
-
-function lastPut(): { url: string; body: SpecPutBody } {
+function lastPut(): { url: string; spec: ApplicationSpec } {
   const calls = mockFetch.mock.calls as [string, RequestInit | undefined][];
   const putCall = [...calls].reverse().find((c) => c[1]?.method === "PUT");
   if (!putCall) throw new Error("no PUT call recorded");
   return {
     url: putCall[0],
-    body: JSON.parse(putCall[1]!.body as string) as SpecPutBody,
+    spec: JSON.parse(putCall[1]!.body as string) as ApplicationSpec,
   };
 }
 
 function lastPutSpec(): ApplicationSpec {
-  return lastPut().body.spec;
+  return lastPut().spec;
 }
 
 describe("setServiceEnabled", () => {
@@ -81,17 +74,21 @@ describe("setServiceEnabled", () => {
     expect(params).toEqual([{ name: "services.svc-a.enabled", value: "false" }]);
   });
 
-  it("writes via the UpdateSpec endpoint with validate=false", async () => {
+  it("writes via the UpdateSpec endpoint with validate=false and appNamespace in the query", async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse(makeParent([])));
     mockFetch.mockResolvedValueOnce(jsonResponse(makeParent([])));
 
     await setServiceEnabled("parent-app", "svc-a", true, "argocd");
 
-    const { url, body } = lastPut();
-    expect(url).toBe("/api/v1/applications/parent-app/spec");
-    expect(body.name).toBe("parent-app");
-    expect(body.validate).toBe(false);
-    expect(body.appNamespace).toBe("argocd");
+    const { url, spec } = lastPut();
+    expect(url).toBe("/api/v1/applications/parent-app/spec?appNamespace=argocd&validate=false");
+    // Body is the raw ApplicationSpec (ArgoCD's UpdateSpec uses body: "spec"),
+    // not a wrapping {name, spec, validate, ...} envelope.
+    expect(spec.project).toBe("parent-app");
+    expect(spec.source!.helm!.parameters).toContainEqual({
+      name: "services.svc-a.enabled",
+      value: "true",
+    });
   });
 
   it("replaces the parameter when present with a different value", async () => {

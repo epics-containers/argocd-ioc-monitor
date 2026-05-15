@@ -34,11 +34,17 @@ function putApplicationSpec(
   spec: ApplicationSpec,
   appNamespace?: string,
 ): Promise<unknown> {
-  const body: Record<string, unknown> = { name, spec, validate: false };
-  if (appNamespace) body.appNamespace = appNamespace;
+  // Per ArgoCD's grpc-gateway annotation `body: "spec"`, the HTTP body is the
+  // ApplicationSpec itself — not a wrapping {name, spec, validate, ...}
+  // envelope. Sending the envelope causes ArgoCD to parse it as the spec,
+  // resolve project="" and deny on the empty-project RBAC subject.
+  const params = new URLSearchParams();
+  if (appNamespace) params.set("appNamespace", appNamespace);
+  params.set("validate", "false");
+  const query = params.toString();
   return argocdFetch<unknown>(
-    `/api/v1/applications/${encodeURIComponent(name)}/spec`,
-    { method: "PUT", body: JSON.stringify(body) },
+    `/api/v1/applications/${encodeURIComponent(name)}/spec?${query}`,
+    { method: "PUT", body: JSON.stringify(spec) },
   );
 }
 
